@@ -50,7 +50,7 @@ export class Sky {
     this.inner.quaternion.copy(moonToLocal);
     this.group.add(this.inner);
 
-    const stars = createStarfield(7000, 400);
+    const stars = createStarfield(22000, 400);
     stars.scale.setScalar((SKY_KM * 1.6) / 400);
     stars.material.transparent = true;
     this.stars = stars;
@@ -158,10 +158,10 @@ export class Sky {
     this.flare.visible = vis > 0.001;
     const fade = (1 - Math.min(1, Math.hypot(ndc.x, ndc.y) / 1.3) * 0.5) * vis;
     place(this.star, ndc.x, ndc.y, 0.15);
-    this.star.material.opacity = 0.75 * fade;
+    this.star.material.opacity = 0.3 * fade;
     for (const g of this.ghosts) {
       place(g, ndc.x * g.userData.k, ndc.y * g.userData.k, g.userData.size * 2);
-      g.material.opacity = 0.3 * fade;
+      g.material.opacity = 0.07 * fade;
     }
   }
 
@@ -208,7 +208,7 @@ export class Sky {
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      const l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: 0xff9a6a, dashSize: R * 0.02, gapSize: R * 0.015, transparent: true, opacity: 0.85, depthWrite: false }));
+      const l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: 0xff9a6a, dashSize: R * 0.02, gapSize: R * 0.015, transparent: true, opacity: 0.22, depthWrite: false }));
       l.computeLineDistances();
       l.frustumCulled = false;
       this.dome.add(l);
@@ -250,8 +250,8 @@ function line(positions, colors, color, opacity, onTop) {
   const m = new THREE.LineBasicMaterial({
     color: colors ? 0xffffff : color,
     vertexColors: !!colors,
-    transparent: opacity < 1,
-    opacity,
+    transparent: true,
+    opacity: opacity * 0.55, // integration: guides stay readable but no longer dominate the sky
     depthTest: !onTop,
     depthWrite: false,
   });

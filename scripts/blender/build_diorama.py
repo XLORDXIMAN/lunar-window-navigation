@@ -99,6 +99,7 @@ def fbm2(x, y, octaves=6, base=0.004, seed=0):
     out = np.zeros_like(x)
     amp, freq = 1.0, base
     g = np.random.default_rng(seed).random((257, 257))
+    g[256, :] = g[0, :]; g[:, 256] = g[:, 0]                 # periodic table: no seam where x·freq wraps at 0
     for _ in range(octaves):
         xs, ys = (x * freq) % 256, (y * freq) % 256          # freq in cycles per metre
         xi, yi = np.floor(xs).astype(int), np.floor(ys).astype(int)

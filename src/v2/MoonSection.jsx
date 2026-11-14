@@ -36,6 +36,7 @@ export default function MoonSection() {
   useEffect(() => {
     const m = new MoonScene(box.current, { hud: true })
     moon.current = m
+    if (import.meta.env.DEV) window.__moon = m // dev-only hook for QA screenshots
     m.setMaxPixelRatio?.(1.5)
     m.setDate(new Date(useStore.getState().time)) // start on the app's date, not 'now'
     // render only while the Moon chapter is on screen (big GPU saving everywhere else)
@@ -158,8 +159,7 @@ export default function MoonSection() {
       <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/85 to-transparent pointer-events-none" />
 
       {/* cinematic letterbox during landing */}
-      <div className="absolute inset-x-0 top-0 bg-black pointer-events-none transition-[height] duration-700 z-20" style={{ height: cine ? '9vh' : 0 }} />
-      <div className="absolute inset-x-0 bottom-0 bg-black pointer-events-none transition-[height] duration-700 z-20" style={{ height: cine ? '9vh' : 0 }} />
+      <div className="absolute inset-x-0 top-0 h-[14vh] bg-gradient-to-b from-black/70 to-transparent pointer-events-none transition-opacity duration-700 z-20" style={{ opacity: cine ? 1 : 0 }} />
 
       {/* top bar */}
       <div className={`absolute top-0 inset-x-0 z-30 wrap pt-8 flex flex-wrap items-start gap-4 transition-opacity duration-500 ${cine ? 'opacity-0 pointer-events-none' : ''}`}>
@@ -248,7 +248,7 @@ export default function MoonSection() {
 
       {/* touchdown result */}
       {result && !cine && (
-        <div className="absolute z-40 left-1/2 top-[22%] -translate-x-1/2 w-[min(92vw,420px)]"><div className="lux-glass reg-dots p-7 text-center">
+        <div className="absolute z-40 right-[clamp(16px,4vw,56px)] bottom-[150px] w-[min(92vw,380px)]"><div className="lux-glass reg-dots p-6 text-center">
           <div className="eyebrow">{t('land.done')}</div>
           <div className={`font-display text-[44px] mt-3 ${soft === 'hard' ? 'text-nogo' : soft === 'ok' ? 'text-warn' : 'text-go'}`}>{result.touchdownSpeed != null ? `${result.touchdownSpeed.toFixed(2)} m/s` : '✓'}</div>
           <div className="text-[15px] text-[var(--lux-hi)] mt-1">{soft ? t(`land.${soft}`) : ''}</div>

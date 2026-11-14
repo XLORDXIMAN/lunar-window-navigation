@@ -35,10 +35,10 @@ async function environment(site, time, profile) {
     if (!r.ok) throw new Error(r.status)
     const s = (await r.json()).series?.[0]
     if (!s) throw new Error('empty')
-    return { sunAz: s.sun_az, sunEl: s.sun_el, earthAz: s.earth_az, earthEl: s.earth_el, energy: s.energy_coefficient, profile: prof, source: 'FastAPI /api/simulate · DE440s' }
+    return { sunAz: s.sun_az, sunEl: s.sun_el, earthAz: s.earth_az, earthEl: s.earth_el, energy: s.energy_coefficient, profile: prof, source: 'Ephemeris: JPL DE440s · FastAPI' }
   } catch {
     const sp = sunPos(site, time), ep = earthPos(site, time)
-    return { sunAz: sp.az, sunEl: sp.el, earthAz: ep.az, earthEl: ep.el, energy: diskFraction(sp.az, sp.el, prof), profile: prof, source: 'DE440s export (API offline)' }
+    return { sunAz: sp.az, sunEl: sp.el, earthAz: ep.az, earthEl: ep.el, energy: diskFraction(sp.az, sp.el, prof), profile: prof, source: 'Ephemeris: JPL DE440s' }
   }
 }
 
@@ -60,14 +60,25 @@ export default function LandingLab({ site, time, profile, siteLabel, onClose }) 
       onPhase: setPhase, onReady: () => setReady(true), onError: (e) => setErr(String(e)),
     })
     sim.current = s
+    if (import.meta.env.DEV) window.__lab = s // dev-only hook for QA screenshots
     // a night landing is invisible (no air → no skylight): move to local morning, like the main landing
     ;(async () => {
       let env = await environment(site, time, profile), when = time, moved = false
-      if (env.sunEl < 1 || env.energy < 0.05) {
-        for (let h = 1; h <= 24 * 30; h++) {
-          const sp = sunPos(site, time + h * 3600e3)
-          const ok = Math.abs(site.lat) > 60 ? diskFraction(sp.az, sp.el, env.profile) > 0.9 && sp.el > 0.5 : sp.el > 9
-          if (ok) { when = time + h * 3600e3 + 2 * 3600e3; moved = true; break }
+      const polar = Math.abs(site.lat) > 60
+      if (env.sunEl < (polar ? 1.2 : 1) || env.energy < 0.05) {
+        if (polar) {
+          // near the pole the Sun skims the horizon: pick the hour of highest Sun (fully above the local
+          // skyline) in the next lunar day so the terrain is readable — a real, reachable landing time
+          let best = null
+          for (let h = 1; h <= 24 * 30; h += 2) {
+            const sp = sunPos(site, time + h * 3600e3)
+            if (diskFraction(sp.az, sp.el, env.profile) > 0.95 && (!best || sp.el > best.el)) best = { h, el: sp.el }
+          }
+          if (best) { when = time + best.h * 3600e3; moved = true }
+        } else {
+          for (let h = 1; h <= 24 * 30; h++) {
+            if (sunPos(site, time + h * 3600e3).el > 9) { when = time + h * 3600e3 + 2 * 3600e3; moved = true; break }
+          }
         }
         if (moved) env = await environment(site, when, profile)
       }

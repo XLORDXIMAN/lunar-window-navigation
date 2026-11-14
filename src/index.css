@@ -418,3 +418,7 @@ a.lux-glass:hover, button.lux-glass:hover { background: rgba(186,207,247,.04); b
   #moon .moon-hud .hud-note, #moon .moon-hud .hud-note-line, #moon .moon-hud .hud-badge, #moon .moon-hud .hud-legend { display: none; }
   #moon .moon-hud .hud-readout { top: 170px; transform: translateX(-50%) scale(.85); }
 }
+
+/* integration: cinematic landing — no developer strings over the shot */
+#moon.is-landing .moon-hud .hud-badge, #moon.is-landing .moon-hud .hud-note-line, #moon.is-landing .moon-hud .hud-readout { opacity: 0 !important; transition: opacity .4s; }
+#moon .moon-hud .hud-badge, #moon .moon-hud .hud-note-line, #moon .moon-hud .hud-caption { display: none !important; }

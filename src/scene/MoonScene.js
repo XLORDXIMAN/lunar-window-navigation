@@ -20,6 +20,7 @@ import { azEl, horizonAt, horizonProfile, siteConditions, siteFrame, EYE_HEIGHT_
 import { SiteActors } from './surface/siteActors.js';
 import { setPointScale } from './effects.js';
 import { LanderFx } from './landerFx.js';
+import { createFirePlume, createDustSkirt } from './firePlume.js';
 import { DescentSim } from './descentSim.js';
 import './scene.css';
 
@@ -97,6 +98,9 @@ export class MoonScene {
     }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    // integration: real cast shadows in the surface/descent views (only lights with castShadow pay for it)
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
     container.insertBefore(this.renderer.domElement, this.hud.root);
 
@@ -798,6 +802,7 @@ export class MoonScene {
       g.position.set(0, 0, 0);
       g.quaternion.identity();
       g.scale.setScalar(0.001);
+      g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } });
       this.sphereView.scene.add(g);
     }
   }
@@ -891,7 +896,8 @@ export class MoonScene {
       this.flyTo(site.id ?? site, { duration: 1500, distance: 1.15 });
       await wait(1550);
       await this._sphereDescent(site, lander);
-      await this.enterSurfaceView(site, { standoffM: lander ? 28 : 0 });
+      // look down-Sun: the lander front-lit, its long shadow raking away, no flare in frame
+      await this.enterSurfaceView(site, { standoffM: lander ? 28 : 0, yawDeg: this._descentSunAz != null ? this._descentSunAz + 160 : undefined });
       if (lander && this.surface) {
         this.surface.lander = lander;
         this._placeSurfaceModels();
@@ -1017,10 +1023,7 @@ export class MoonScene {
       }
       // факел и пыль — от реальной тяги
       const firing = s.phase === 'APPROACH' || s.phase === 'VERTICAL';
-      if (L.plume) {
-        L.plume.material.opacity = firing ? (0.25 + 0.55 * s.throttle) * (0.9 + 0.1 * Math.sin(now * 0.05)) : 0;
-        L.plume.scale.y = 0.6 + 0.9 * s.throttle;
-      }
+      if (L.plume) L.plume.userData.drive(firing ? s.throttle : 0, now / 1000, s.alt);
       if (firing) this.actors.engineBlast(s.alt, s.throttle);
       const u = pv.material.uniforms;
       u.uPlumePos.value.copy(PoleFrame.toLocal(L.toMoon(s.pos[0], s.pos[1], L.groundZ(s.pos[0], s.pos[1]) + 1), new THREE.Vector3()));
@@ -1070,30 +1073,38 @@ export class MoonScene {
       v.sky.flareEnabled = true;
       v.models.clear();
       v.dust.clear();
-      this.hud.setBadge(`Descent · ${site.name ?? 'site'} · LROC albedo + procedural regolith · g = 1.62 m/s²`);
+      this.hud.setBadge(`Descent · LROC + Blender relief`);
     });
     // approach with the Sun to the side so the lander and its shadow are both in frame
     const sunDir = latLonToVector(this.sub.sunLat, this.sub.sunLon);
-    const sunAz = azEl(v.frame, sunDir).az * D2R, head = sunAz + Math.PI / 2;
+    this._descentSunAz = azEl(v.frame, sunDir).az;
+    const sunAz = this._descentSunAz * D2R, head = sunAz + Math.PI / 2;
     const dir = [Math.sin(head), Math.cos(head)];
-    const groundZ = (x, y) => -(x * x + y * y) / (2 * R_KM * 1000);
+    const groundZ = (x, y) => v.heightAt(x / 1000, -y / 1000) * 1000; // Blender relief + curvature, m
     const L = { sim: new DescentSim({ approachDir: dir }), groundZ, lander, quat: new THREE.Quaternion(), dir, landedAt: null, camTarget: null, camInit: false };
     if (lander) {
       lander.position.set(0, 0, 0);
       lander.scale.setScalar(0.001);
+      lander.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } });
       v.models.add(lander);
       this._attachPlume(lander);
       lander.userData.fx = new LanderFx(lander, { unit: 0.001 });
       lander.userData.legs = [];
       lander.traverse((o) => o.name.startsWith('LegHinge_') && lander.userData.legs.push({ o, q: o.quaternion.clone() }));
     }
+    L.skirt = createDustSkirt(0.04);
+    v.scene.add(L.skirt);
     this.sphereLanding = L;
     await new Promise((resolve) => (L.resolve = resolve));
+    v.scene.remove(L.skirt);
+    L.skirt.geometry.dispose(); L.skirt.material.dispose();
     this._lastDescent = { touchdownSpeed: L.sim.touchdownSpeed, t: L.sim.t };
     this.sphereLanding = null;
     this._detachPlume();
     v.models.clear();
     v.dust.clear();
+    v.shadowFocus.set(0, 0, 0);
+    v.sky.flareEnabled = false; // the touchdown card sits mid-frame: no flare streak behind it
     v.camera.fov = 60;
   }
 
@@ -1123,14 +1134,17 @@ export class MoonScene {
       L.quat.slerp(target, 1 - Math.exp(-dt * scale * 2.5));
       L.lander.position.copy(pos);
       L.lander.quaternion.copy(L.quat);
+      v.shadowFocus.set(pos.x, 0, pos.z);
       const turning = before.angleTo(L.quat) / Math.max(dt, 1e-3);
       L.lander.userData.fx?.update(now / 1000, dt, { rcsRate: turning > 0.05 ? 8 : 0 });
       const unfold = 1 - THREE.MathUtils.smoothstep(s.alt, 300, 600);
       for (const { o, q } of L.lander.userData.legs ?? []) o.quaternion.copy(q).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), (1 - unfold) * -1.1));
-      if (this._plume) {
-        this._plume.material.opacity = firing ? (0.25 + 0.55 * s.throttle) * (0.9 + 0.1 * Math.sin(now * 0.05)) : 0;
-        this._plume.scale.y = 0.6 + 0.9 * s.throttle;
-      }
+      if (this._plume) this._plume.userData.drive(firing ? s.throttle : 0, now / 1000, s.alt);
+    }
+    {
+      const gy = L.groundZ(s.pos[0], s.pos[1]) / 1000;
+      L.skirt.position.set(pos.x, gy + 0.00015, pos.z);
+      L.skirt.userData.drive(firing && s.alt < 30 ? s.throttle * Math.pow(1 - s.alt / 30, 1.5) * 1.3 : 0, now / 1000);
     }
     if (firing && s.alt < 25) v.dust.emit(L.groundZ(s.pos[0], s.pos[1]) / 1000, s.throttle * (1 - s.alt / 25), dt * scale);
     v.dust.update(dt * scale);
@@ -1144,7 +1158,7 @@ export class MoonScene {
     const cam = v.camera;
     if (!L.camInit) { L.camInit = true; cam.position.copy(goal); cam.fov = 32; cam.near = 0.0005; cam.far = 30000; }
     cam.position.lerp(goal, 1 - Math.exp(-dt * 2.2));
-    const gY = -(cam.position.x ** 2 + cam.position.z ** 2) / (2 * R_KM) + km(1.5);
+    const gY = v.heightAt(cam.position.x, cam.position.z) + km(1.8);
     if (cam.position.y < gY) cam.position.y = gY;
     if (firing && s.alt < 120) { const amp = km(0.25) * s.throttle * (1 - s.alt / 120); cam.position.addScaledVector(side, (Math.random() - 0.5) * amp).addScaledVector(up, (Math.random() - 0.5) * amp); }
     const look = pos.clone().addScaledVector(up, km(3));
@@ -1157,32 +1171,19 @@ export class MoonScene {
   }
 
   _attachPlume(lander) {
-    const geo = new THREE.ConeGeometry(1.1, 7, 24, 1, true).translate(0, -3.5, 0);
-    const mat = new THREE.MeshBasicMaterial({
-      color: 0xffc27a,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const plume = new THREE.Mesh(geo, mat);
-    // white-hot inner core (added in integration); follows the outer plume's opacity/scale
-    const core = new THREE.Mesh(new THREE.ConeGeometry(0.45, 4.2, 18, 1, true).translate(0, -2.1, 0),
-      new THREE.MeshBasicMaterial({ color: 0xfff4dd, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    plume.add(core);
-    plume.onBeforeRender = () => { core.material.opacity = Math.min(1, mat.opacity * 1.5) };
+    // integration: animated shader flame + nozzle glow + ground-washing light (see firePlume.js)
+    const plume = createFirePlume({ length: 8, radius: 1.1 });
     const nozzle = lander.getObjectByName('Nozzle_Main') ?? lander.getObjectByName('Engine') ?? lander;
     plume.position.set(0, nozzle === lander ? 0.6 : 0, 0);
     nozzle.add(plume);
+    plume.userData.drive(0, 0);
     this._plume = plume;
   }
 
   _detachPlume() {
     if (!this._plume) return;
     this._plume.parent?.remove(this._plume);
-    this._plume.geometry.dispose();
-    this._plume.material.dispose();
+    this._plume.userData.dispose();
     this._plume = null;
   }
 

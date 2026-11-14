@@ -127,7 +127,7 @@ export class Hud {
     const range = c.horizonRangeKm ? ` (terrain modeled to ${Math.round(c.horizonRangeKm)} km)` : '';
     this.q('[data-note]').textContent = c.terrainModeled
       ? `Horizon from LOLA terrain${range} · no atmosphere, no refraction`
-      : 'Smooth-sphere horizon · terrain not modeled here';
+      : '';
   }
 
   setCaption(text) {
