@@ -11,7 +11,7 @@ const DEG = Math.PI / 180
 const N = 9000
 const MARIA = [[33, -16, 17], [28, 17, 9], [8.5, 31, 10], [17, 59, 7.5], [-7.8, 51.3, 9], [-21, -16.6, 10], [18, -57, 24], [5, -35, 14], [-15, 35, 5], [-24, -39, 6], [13, 3.6, 5], [-10, -23, 6], [56, 1, 7], [44, 26, 5], [-57, 160, 12]]
 const VIEWS = { pole: { lat: -90, lon: 0, zoom: 1.45 }, near: { lat: 0, lon: 0, zoom: 1 }, far: { lat: 0, lon: 180, zoom: 1 } }
-const VCOL = { green: '#3ddc97', yellow: '#e8c547', red: '#ff5a4f' }
+const VCOL = { green: '#7cff6b', yellow: '#ffd84d', red: '#ff4d6d' }
 
 function buildPoints() {
   const ga = Math.PI * (3 - Math.sqrt(5)), pts = new Float32Array(N * 4)
@@ -80,7 +80,7 @@ export default function DotMoon() {
       const ss = subSolarAt(st.time), sv = toVec(ss.lat * DEG, ss.lon * DEG)
       ctx.clearRect(0, 0, w, h)
       // limb
-      ctx.strokeStyle = 'rgba(216,234,255,.18)'; ctx.lineWidth = dpr
+      ctx.strokeStyle = 'rgba(234,242,255,.18)'; ctx.lineWidth = dpr
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke()
       for (let i = 0; i < N; i++) {
         const lat = pts[i * 4], lon = pts[i * 4 + 1], alb = pts[i * 4 + 2]
@@ -91,14 +91,14 @@ export default function DotMoon() {
         const s = (0.9 + z * 1.1) * dpr * Math.min(1.6, cur.zoom * 0.75)
         if (mu > 0) {
           const b = Math.min(1, alb * (0.25 + 0.75 * Math.pow(mu, 0.6)))
-          ctx.fillStyle = mu < 0.009 ? `rgba(255,122,69,${0.55 + 0.45 * b})` : `rgba(216,234,255,${0.3 + 0.7 * b})`
-        } else ctx.fillStyle = `rgba(31,88,242,${0.18 + 0.1 * z})`
+          ctx.fillStyle = mu < 0.009 ? `rgba(255,190,60,${0.55 + 0.45 * b})` : `rgba(234,242,255,${0.3 + 0.7 * b})`
+        } else ctx.fillStyle = `rgba(61,123,255,${0.18 + 0.1 * z})`
         ctx.fillRect(px - s / 2, py - s / 2, s, s)
       }
       // graticule rings for the pole view: 80°, 85° S
       if (cur.zoom > 1.2) {
         for (const ring of [-80, -85]) {
-          ctx.strokeStyle = 'rgba(216,234,255,.12)'; ctx.setLineDash([2 * dpr, 6 * dpr]); ctx.beginPath()
+          ctx.strokeStyle = 'rgba(234,242,255,.12)'; ctx.setLineDash([2 * dpr, 6 * dpr]); ctx.beginPath()
           for (let k = 0; k <= 72; k++) { const p = proj(toVec(ring * DEG, k * 5 * DEG), B, R, cx, cy); k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]) }
           ctx.stroke(); ctx.setLineDash([])
         }
@@ -113,9 +113,9 @@ export default function DotMoon() {
         const sel = s.id === st.selectedId, hov = hover.current === s.id
         ctx.fillStyle = VCOL[v.level]; ctx.fillRect(px - 3 * dpr, py - 3 * dpr, 6 * dpr, 6 * dpr)
         if (sel || hov) {
-          ctx.strokeStyle = sel ? '#5b8cff' : '#d8eaff'; ctx.lineWidth = dpr
+          ctx.strokeStyle = sel ? '#47c8ff' : '#eaf2ff'; ctx.lineWidth = dpr
           ctx.strokeRect(px - 8 * dpr, py - 8 * dpr, 16 * dpr, 16 * dpr)
-          ctx.font = `${11 * dpr}px "IBM Plex Mono", monospace`; ctx.fillStyle = '#d8eaff'
+          ctx.font = `${11 * dpr}px "IBM Plex Mono", monospace`; ctx.fillStyle = '#eaf2ff'
           ctx.fillText(siteName(s, st.lang).split(' — ')[0].toUpperCase(), px + 13 * dpr, py + 4 * dpr)
         }
         hit.push({ id: s.id, x: px / dpr, y: py / dpr })
@@ -123,13 +123,13 @@ export default function DotMoon() {
       sitesRef.current = hit
       // Sun & Earth direction markers on the limb
       const se = subEarthAt(st.time)
-      for (const [sub, col, lab] of [[ss, '#ff4105', t('sun')], [se, '#5b8cff', t('earth')]]) {
+      for (const [sub, col, lab] of [[ss, '#ff7a1a', t('sun')], [se, '#47c8ff', t('earth')]]) {
         const [px, py] = proj(toVec(sub.lat * DEG, sub.lon * DEG), B, 1, 0, 0)
         const len = Math.hypot(px, py) || 1, ux = px / len, uy = py / len
         const rr = Math.min(R + 26 * dpr, Math.min(w, h) / 2 - 14 * dpr)
         const mx = cx + ux * rr, my = cy + uy * rr
         ctx.fillStyle = col
-        if (col === '#ff4105') ctx.fillRect(mx - 4 * dpr, my - 4 * dpr, 8 * dpr, 8 * dpr); else { ctx.beginPath(); ctx.arc(mx, my, 4.5 * dpr, 0, Math.PI * 2); ctx.fill() }
+        if (col === '#ff7a1a') ctx.fillRect(mx - 4 * dpr, my - 4 * dpr, 8 * dpr, 8 * dpr); else { ctx.beginPath(); ctx.arc(mx, my, 4.5 * dpr, 0, Math.PI * 2); ctx.fill() }
         ctx.font = `${10 * dpr}px "IBM Plex Mono", monospace`; ctx.fillText(lab.toUpperCase(), mx + 9 * dpr, my + 3 * dpr)
       }
       if (visible && !reduce) raf = requestAnimationFrame(draw)

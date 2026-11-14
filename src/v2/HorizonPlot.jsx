@@ -38,7 +38,7 @@ export default function HorizonPlot() {
         <defs><clipPath id="hp"><rect x={PL} y={PT - 12} width={W - PL - PR} height={H - PT - PB + 12} /></clipPath></defs>
         {ticks.map((tk) => (
           <g key={tk}>
-            <line x1={PL} x2={W - PR} y1={y(tk)} y2={y(tk)} stroke="#d8eaff" strokeOpacity={tk === 0 ? 0.45 : 0.1} strokeDasharray={tk === 0 ? '' : '2 6'} />
+            <line x1={PL} x2={W - PR} y1={y(tk)} y2={y(tk)} stroke="#eaf2ff" strokeOpacity={tk === 0 ? 0.45 : 0.1} strokeDasharray={tk === 0 ? '' : '2 6'} />
             <text x={PL - 8} y={y(tk) + 3} fontSize="10" fill="#6c757f" textAnchor="end" fontFamily="IBM Plex Mono, monospace">{tk}°</text>
           </g>
         ))}
@@ -46,27 +46,27 @@ export default function HorizonPlot() {
           <text key={az} x={x(az)} y={H - 8} fontSize="10" fill="#6c757f" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" letterSpacing="1.6">{l}</text>
         ))}
         <g clipPath="url(#hp)">
-          <polyline points={trail.map((p) => `${x(p.az).toFixed(1)},${y(p.el).toFixed(1)}`).join(' ')} fill="none" stroke="#ff4105" strokeOpacity=".5" strokeWidth="1" strokeDasharray="1 5" />
-          {st.earthVis && <line x1={ex} y1={ey} x2={lx} y2={ly - 12} stroke="#5b8cff" strokeWidth="1" className="beam" />}
+          <polyline points={trail.map((p) => `${x(p.az).toFixed(1)},${y(p.el).toFixed(1)}`).join(' ')} fill="none" stroke="#ff7a1a" strokeOpacity=".5" strokeWidth="1" strokeDasharray="1 5" />
+          {st.earthVis && <line x1={ex} y1={ey} x2={lx} y2={ly - 12} stroke="#47c8ff" strokeWidth="1" className="beam" />}
           <g className="smooth" style={{ transform: `translate(${sx}px, ${sy}px)` }}>
-            <rect x="-6" y="-6" width="12" height="12" fill={sunOn ? '#ff4105' : 'none'} stroke="#ff4105" strokeWidth="1.2" />
-            <rect x="-12" y="-12" width="24" height="24" fill="none" stroke="#ff4105" strokeOpacity=".35" />
+            <rect x="-6" y="-6" width="12" height="12" fill={sunOn ? '#ff7a1a' : 'none'} stroke="#ff7a1a" strokeWidth="1.2" />
+            <rect x="-12" y="-12" width="24" height="24" fill="none" stroke="#ff7a1a" strokeOpacity=".35" />
           </g>
           <g className="smooth" style={{ transform: `translate(${ex}px, ${ey}px)` }}>
-            <circle r="7" fill={st.earthVis ? '#1f58f2' : 'none'} stroke="#5b8cff" strokeWidth="1.2" />
+            <circle r="7" fill={st.earthVis ? '#3d7bff' : 'none'} stroke="#47c8ff" strokeWidth="1.2" />
           </g>
           <polygon points={ground} fill="#0d0d0f" />
-          <polyline points={ridge} fill="none" stroke="#d8eaff" strokeWidth="1" strokeOpacity=".85" />
+          <polyline points={ridge} fill="none" stroke="#eaf2ff" strokeWidth="1" strokeOpacity=".85" />
         </g>
-        <g transform={`translate(${lx},${ly})`} stroke="#d8eaff" strokeWidth="1" fill="none">
+        <g transform={`translate(${lx},${ly})`} stroke="#eaf2ff" strokeWidth="1" fill="none">
           <path d="M-8 6 L-4 -2 H4 L8 6 M-4 -2 V-8 H4 V-2 M0 -8 V-14" />
-          <circle cy="-15" r="1.8" fill={st.earthVis ? '#5b8cff' : '#ff5a4f'} stroke="none" />
+          <circle cy="-15" r="1.8" fill={st.earthVis ? '#47c8ff' : '#ff4d6d'} stroke="none" />
         </g>
         <g className="smooth" style={{ transform: `translate(${sx}px, ${sy}px)` }}>
-          <text x="16" y="-10" fontSize="11" fill="#ff7a45" fontFamily="IBM Plex Mono, monospace">{t('sun')} {st.sun.el >= 0 ? '+' : ''}{st.sun.el.toFixed(2)}°</text>
+          <text x="16" y="-10" fontSize="11" fill="#ffb020" fontFamily="IBM Plex Mono, monospace">{t('sun')} {st.sun.el >= 0 ? '+' : ''}{st.sun.el.toFixed(2)}°</text>
         </g>
         <g className="smooth" style={{ transform: `translate(${ex}px, ${ey}px)` }}>
-          <text x="14" y="16" fontSize="11" fill="#8aaaff" fontFamily="IBM Plex Mono, monospace">{t('earth')} {st.earth.el.toFixed(2)}°{st.earth.el < yMin ? ' ↓' : ''}</text>
+          <text x="14" y="16" fontSize="11" fill="#7fd8ff" fontFamily="IBM Plex Mono, monospace">{t('earth')} {st.earth.el.toFixed(2)}°{st.earth.el < yMin ? ' ↓' : ''}</text>
         </g>
       </svg>
       <div className="mono-sm text-fog mt-2 normal-case tracking-[.04em]">{t('hzNote')}</div>

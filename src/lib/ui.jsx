@@ -31,7 +31,7 @@ export const siteName = (s, lang) => (lang === 'ru' && s.nameRu ? s.nameRu : s.n
 export const useSiteName = () => { const lang = useStore((s) => s.lang); return (s) => siteName(s, lang) }
 
 // Scroll reveal: fade + rise once the block enters the viewport (stagger via `delay`, seconds)
-export function Reveal({ children, delay = 0, className = '', ...rest }) {
+export function Reveal({ children, delay = 0, className = '', style, ...rest }) {
   const ref = useRef(null)
   const [on, setOn] = useState(false)
   useEffect(() => {
@@ -41,5 +41,5 @@ export function Reveal({ children, delay = 0, className = '', ...rest }) {
     io.observe(el)
     return () => io.disconnect()
   }, [])
-  return <div ref={ref} className={`reveal ${on ? 'in' : ''} ${className}`} style={{ transitionDelay: `${delay}s` }} {...rest}>{children}</div>
+  return <div ref={ref} className={`reveal ${on ? 'in' : ''} ${className}`} style={{ transitionDelay: `${delay}s`, ...style }} {...rest}>{children}</div>
 }

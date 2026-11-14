@@ -93,9 +93,9 @@ export default function Intro({ onDone }) {
         const band = Math.exp(-Math.pow((rel - sweep) / 0.07, 2))
         const alpha = Math.min(1, (0.25 + 0.75 * k) * (fall > 0 ? Math.max(0, 1 - fall * 1.2) : 1))
         let col
-        if (p.layer === 'tech') col = band > 0.3 ? `rgba(185,204,255,${alpha})` : `rgba(31,88,242,${alpha})`
-        else if (k < 0.9) col = `rgba(31,88,242,${alpha * 0.9})`
-        else col = band > 0.3 ? `rgba(255,255,255,${alpha})` : `rgba(216,234,255,${alpha * (0.78 + 0.22 * band)})`
+        if (p.layer === 'tech') col = band > 0.3 ? `rgba(191,234,255,${alpha})` : `rgba(61,123,255,${alpha})`
+        else if (k < 0.9) col = `rgba(61,123,255,${alpha * 0.9})`
+        else col = band > 0.3 ? `rgba(255,255,255,${alpha})` : `rgba(234,242,255,${alpha * (0.78 + 0.22 * band)})`
         ctx.fillStyle = col
         const sz = (p.layer === 'div' ? 1.4 : 1.8) * dpr * (1 + band * 0.5)
         ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz)

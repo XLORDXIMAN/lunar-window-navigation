@@ -9,9 +9,9 @@
 
 @theme {
   /* ---- Surfaces & neutrals (system) ---- */
-  --color-ice: #d8eaff;          /* primary text + hairline borders */
-  --color-void: #000000;         /* level 0 — page canvas */
-  --color-carbon: #0d0d0f;       /* level 1 — cards */
+  --color-ice: #eaf2ff;          /* primary text + hairline borders */
+  --color-void: #05060d;         /* level 0 — page canvas */
+  --color-carbon: #0a0b18;       /* level 1 — cards */
   --color-graphite: #232529;     /* level 2 */
   --color-slate-surface: #2b2f33;/* level 3 — default panel */
   --color-iron: #41464c;
@@ -20,15 +20,15 @@
   --color-iron-edge: #565657;
 
   /* ---- Accents (system) ---- */
-  --color-cobalt: #1f58f2;       /* Earth · link · selection · accent words */
-  --color-signal: #ff4105;       /* Sun · energy · primary action */
+  --color-cobalt: #3d7bff;       /* Earth · link · selection · accent words */
+  --color-signal: #ff7a1a;       /* Sun · energy · primary action */
 
   /* ---- added for LunarWindow ---- */
-  --color-cobalt-lt: #5b8cff;    /* cobalt lifted for small text on black */
-  --color-signal-lt: #ff7a45;    /* signal lifted for small text on black */
-  --color-go: #3ddc97;
-  --color-warn: #e8c547;
-  --color-nogo: #ff5a4f;
+  --color-cobalt-lt: #47c8ff;    /* cobalt lifted for small text on black */
+  --color-signal-lt: #ffb020;    /* signal lifted for small text on black */
+  --color-go: #7cff6b;
+  --color-warn: #ffd84d;
+  --color-nogo: #ff4d6d;
   --color-line: rgb(216 234 255 / 0.16);   /* ice @16% hairline */
   --color-line-hi: rgb(216 234 255 / 0.42);/* ice @42% hover hairline */
 
@@ -51,7 +51,11 @@
   --color-red-300: #ff8f86; --color-red-400: #ff5a4f; --color-red-500: #f2443a;
 
   /* ---- Typography (system scale; free Cyrillic substitutes) ---- */
-  --font-display: "Onest", "Inter Tight", system-ui, sans-serif; /* Monument substitute w/ Cyrillic */
+  --font-display: "Pixelify Sans", "Onest", system-ui, sans-serif; /* pixel display, Cyrillic */
+  --font-pixel: "Press Start 2P", "Pixelify Sans", monospace;
+  --color-violet: #8b5cff;
+  --color-sun-a: #ffd23f;
+  --color-earth-a: #47c8ff;
   --font-sans: "Onest", "Inter Tight", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --text-caption: 10px; --text-caption--line-height: 1; --text-caption--letter-spacing: 1.6px;
@@ -79,7 +83,12 @@
 html { scroll-behavior: smooth; }
 html, body, #root { min-height: 100%; }
 body {
-  background: var(--color-void);
+  background:
+    radial-gradient(900px 600px at 85% 8%, rgb(139 92 255 / .16), transparent 60%),
+    radial-gradient(800px 600px at 5% 40%, rgb(61 123 255 / .12), transparent 60%),
+    radial-gradient(700px 500px at 70% 85%, rgb(255 122 26 / .08), transparent 60%),
+    var(--color-void);
+  background-attachment: fixed;
   color: var(--color-ice);
   font-family: var(--font-sans);
   font-size: var(--text-body);
@@ -229,3 +238,33 @@ input[type=checkbox] { accent-color: var(--color-cobalt); }
 .navlink:hover, .navlink.on { color: var(--color-signal); }
 .navlink.on::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--color-signal); }
 .rule { height: 1px; background: rgb(216 234 255 / .2); border: 0; }
+
+/* ================= v3 — pixel space arcade ================= */
+.pixel { font-family: var(--font-pixel); letter-spacing: 0; text-transform: uppercase; }
+.h-display { font-family: var(--font-display); font-weight: 600; font-size: clamp(44px, 7.6vw, 116px); line-height: .95; letter-spacing: 0; text-transform: uppercase; }
+.h-section { font-family: var(--font-display); font-weight: 600; font-size: clamp(34px, 5vw, 68px); line-height: 1; letter-spacing: 0; text-transform: uppercase; }
+.h-sm { font-family: var(--font-display); font-weight: 500; font-size: 26px; line-height: 1.15; letter-spacing: 0; }
+.accent { background: linear-gradient(90deg, #47c8ff, #3d7bff 55%, #8b5cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.grad-sun { background: linear-gradient(90deg, #ffd23f, #ff7a1a 60%, #ff4d6d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.grad-earth { background: linear-gradient(90deg, #47c8ff, #3d7bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.glow-sun { text-shadow: 0 0 24px rgb(255 122 26 / .45); }
+.glow-earth { text-shadow: 0 0 24px rgb(71 200 255 / .45); }
+/* gradient hairline card that lights up on hover */
+.card { position: relative; border-radius: 18px; background: linear-gradient(180deg, rgb(255 255 255 / .045), rgb(255 255 255 / .015)); border: 1px solid rgb(234 242 255 / .1);
+  transition: transform .35s var(--ease-out-soft), border-color .35s, box-shadow .35s; overflow: hidden; }
+.card:hover { transform: translateY(-4px); border-color: rgb(234 242 255 / .25); box-shadow: 0 20px 60px -20px var(--glow, rgb(61 123 255 / .45)); }
+.card::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background: radial-gradient(400px 220px at var(--mx, 80%) var(--my, 0%), var(--glow, rgb(61 123 255 / .25)), transparent 70%); }
+.chip { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid rgb(234 242 255 / .15); background: rgb(255 255 255 / .04); }
+.frame { border-color: rgb(234 242 255 / .14); border-radius: 18px; background: linear-gradient(180deg, rgb(255 255 255 / .035), transparent); }
+.frame::after { display: none; }
+.cta { background: linear-gradient(90deg, #ffd23f, #ff7a1a); color: #140800; border: 0; font-weight: 500; box-shadow: 0 0 0 0 rgb(255 122 26 / .5); animation: ctaPulse 2.6s ease-in-out infinite; }
+.cta:hover { background: linear-gradient(90deg, #ffe27a, #ff8f3a); color: #140800; }
+@keyframes ctaPulse { 50% { box-shadow: 0 0 28px 0 rgb(255 122 26 / .45); } }
+.navlink:hover, .navlink.on { color: #ffd23f; }
+.navlink.on::before { background: #ffd23f; box-shadow: 0 0 8px #ffd23f; }
+@keyframes caret { 50% { opacity: 0; } }
+.caret { display: inline-block; width: .55em; height: 1em; background: currentColor; vertical-align: -0.12em; margin-left: 2px; animation: caret 1s steps(1) infinite; }
+@keyframes pxBlink { 50% { opacity: .25; } }
+.px-blink { animation: pxBlink 1.2s steps(2) infinite; }

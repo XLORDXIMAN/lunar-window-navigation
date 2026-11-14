@@ -94,16 +94,16 @@ export default function ParticleTerrain({ className = '', onSun }) {
           const L = lit[idx]
           const s = Math.max(1.2, (2.4 - z * 1.4) * dpr)
           if (L > 0) {
-            ctx.fillStyle = L > 0.7 ? `rgba(216,234,255,${0.6 * fade + 0.35})` : `rgba(64,120,255,${(0.55 + 0.45 * L) * fade + 0.1})`
-          } else ctx.fillStyle = `rgba(31,88,242,${0.16 * fade + 0.04})`
+            ctx.fillStyle = L > 0.7 ? `rgba(234,242,255,${0.6 * fade + 0.35})` : `rgba(71,200,255,${(0.55 + 0.45 * L) * fade + 0.1})`
+          } else ctx.fillStyle = `rgba(61,123,255,${0.16 * fade + 0.04})`
           ctx.fillRect(sx - s / 2, sy - s / 2, s, s)
         }
       }
       // the Sun — a single warm point just above the far horizon
       const farY = horizon + (camY / 2.58) * f * 0.42
       const sunScreenX = w * sunX, sunScreenY = farY - h * 0.05 - (sunEl * 180 / Math.PI) * h * 0.012
-      ctx.fillStyle = '#ff4105'; ctx.fillRect(sunScreenX - 3 * dpr, sunScreenY - 3 * dpr, 6 * dpr, 6 * dpr)
-      ctx.strokeStyle = 'rgba(255,65,5,.35)'; ctx.lineWidth = dpr; ctx.strokeRect(sunScreenX - 9 * dpr, sunScreenY - 9 * dpr, 18 * dpr, 18 * dpr)
+      ctx.fillStyle = '#ff7a1a'; ctx.fillRect(sunScreenX - 3 * dpr, sunScreenY - 3 * dpr, 6 * dpr, 6 * dpr)
+      ctx.strokeStyle = 'rgba(255,122,26,.35)'; ctx.lineWidth = dpr; ctx.strokeRect(sunScreenX - 9 * dpr, sunScreenY - 9 * dpr, 18 * dpr, 18 * dpr)
       if (!reduce && visible) raf = requestAnimationFrame(draw)
     }
     raf = requestAnimationFrame(draw)

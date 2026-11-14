@@ -19,7 +19,7 @@ export function SectionHead({ n, kicker, title, right }) {
     <div className="flex flex-wrap items-end gap-6 mb-10">
       <div className="flex-1 min-w-[280px]">
         <div className="mono text-fog mb-5">{n} · {kicker}</div>
-        <h2 className="h-section" dangerouslySetInnerHTML={{ __html: title.replace(/\*(.+?)\*/g, '<span class="accent">$1</span>') }} />
+        <h2 className="h-section">{title.split('*').map((p, i) => i % 2 ? <span key={i} className="accent">{p}</span> : p)}</h2>
       </div>
       {right}
     </div>
@@ -107,7 +107,7 @@ function Readout() {
       <div className="grid sm:grid-cols-[auto_1fr] gap-x-12 gap-y-6 items-end border-t border-ice/20 pt-6">
         <div>
           <div className="mono-sm text-fog mb-2">{t('sunEl')}</div>
-          <div className="font-display text-[clamp(64px,8vw,112px)] leading-[0.9] tracking-[-0.04em] text-signal num-tab"><AnimNum value={st.sun.el} digits={2} signed suffix="°" /></div>
+          <div className="font-display text-[clamp(72px,9vw,128px)] leading-[0.9] font-semibold grad-sun glow-sun num-tab"><AnimNum value={st.sun.el} digits={2} signed suffix="°" /></div>
         </div>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
           {[a, b].map((r, i) => (
@@ -150,8 +150,8 @@ function Spark({ values, on, color }) {
   values.forEach((v, i) => { const c = `${x(i).toFixed(1)},${y(v).toFixed(1)}`; d += (i ? 'L' : 'M') + c; dOn += (on[i] ? (i && on[i - 1] ? 'L' : 'M') : '') + (on[i] ? c : '') })
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-10 mt-3 block">
-      <line x1="0" x2={W} y1={y(0)} y2={y(0)} stroke="#d8eaff" strokeOpacity=".2" strokeDasharray="2 4" vectorEffect="non-scaling-stroke" />
-      <path d={d} fill="none" stroke="#d8eaff" strokeOpacity=".22" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      <line x1="0" x2={W} y1={y(0)} y2={y(0)} stroke="#eaf2ff" strokeOpacity=".2" strokeDasharray="2 4" vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="#eaf2ff" strokeOpacity=".22" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       <path d={dOn} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
     </svg>
   )
@@ -164,8 +164,8 @@ function Metrics() {
   const t0 = Math.floor(time / HOUR) * HOUR
   const m = windowMetrics(site, t0, 14, 1)
   const earthEl = Array.from({ length: m.link.length }, (_, i) => earthPos(site, t0 + i * HOUR).el)
-  const sparks = [<Spark key="s" values={Array.from(m.sunEl)} on={Array.from(m.sun, (v) => v >= 0.5)} color="#ff4105" />,
-    <Spark key="e" values={earthEl} on={Array.from(m.link, (v) => v === 1)} color="#5b8cff" />]
+  const sparks = [<Spark key="s" values={Array.from(m.sunEl)} on={Array.from(m.sun, (v) => v >= 0.5)} color="#ff7a1a" />,
+    <Spark key="e" values={earthEl} on={Array.from(m.link, (v) => v === 1)} color="#47c8ff" />]
   const cells = [
     [t('sunlight'), <><AnimNum value={m.sunPct} />%</>, 'text-signal', m.sunPct],
     [t('dte'), <><AnimNum value={m.linkPct} />%</>, 'text-cobalt-lt', m.linkPct],
@@ -258,6 +258,37 @@ function Priorities() {
   )
 }
 
+function Steps() {
+  const t = useT(), f = useFmt(), nm = useSiteName()
+  const site = useSite(); const time = useStore((s) => s.time)
+  if (!site) return null
+  const v = verdict(windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1), site)
+  const col = { green: 'text-go', yellow: 'text-warn', red: 'text-nogo' }[v.level]
+  const steps = [[t('step.site'), nm(site).split(' — ')[0], 'text-ice'], [t('step.date'), f.day(time), 'text-ice'], [t('step.answer'), t(`v.${v.level}`).split(' — ')[0], col]]
+  return (
+    <div className="grid md:grid-cols-3 gap-3">
+      {steps.map(([label, val, cls], i) => (
+        <div key={i} className="card px-5 py-4 flex items-center gap-4" style={{ '--glow': i === 2 ? 'rgb(124 255 107 / .2)' : 'rgb(61 123 255 / .2)' }}>
+          <span className="pixel text-[14px] w-10 h-10 grid place-items-center rounded-[10px] bg-ice/10 text-ice shrink-0">{i + 1}</span>
+          <div className="min-w-0">
+            <div className="mono-sm text-fog">{label}</div>
+            <div className={`font-display text-[22px] font-semibold truncate ${cls}`}>{val}</div>
+          </div>
+          {i < 2 && <span className="ml-auto text-fog hidden md:inline pixel text-[12px]">→</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ReadoutCard() {
+  const site = useSite(); const time = useStore((s) => s.time)
+  if (!site) return null
+  const v = verdict(windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1), site)
+  const glow = { green: 'rgb(124 255 107 / .22)', yellow: 'rgb(255 216 77 / .22)', red: 'rgb(255 77 109 / .25)' }[v.level]
+  return <div className="card p-7" style={{ '--glow': glow }}><Readout /></div>
+}
+
 export default function Navigator() {
   const t = useT(), f = useFmt()
   const { time, setTime, kids, setKids, mockData } = useStore()
@@ -278,10 +309,11 @@ export default function Navigator() {
           } />
         </Reveal>
 
-        <div className="grid xl:grid-cols-[minmax(280px,4fr)_8fr] gap-x-16 gap-y-12">
-          <Reveal><SiteList /></Reveal>
-          <div className="flex flex-col gap-10 min-w-0">
-            <Readout />
+        <Steps />
+        <div className="grid xl:grid-cols-[minmax(300px,4fr)_8fr] gap-x-8 gap-y-8 mt-8">
+          <Reveal className="card p-6 self-start" style={{ '--glow': 'rgb(139 92 255 / .25)' }}><SiteList /></Reveal>
+          <div className="flex flex-col gap-8 min-w-0">
+            <ReadoutCard />
             <div className="grid 2xl:grid-cols-[1.6fr_1fr] gap-6 items-start">
               <HorizonPlot />
               <SkyDial />
