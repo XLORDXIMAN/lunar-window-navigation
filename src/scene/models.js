@@ -6,9 +6,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 export const MODEL_CATALOG = {
   apollo_lm: {
     title: 'Apollo Lunar Module',
-    source: 'NASA 3D Resources (official)',
+    source: 'Blender, procedural — after NASA LM drawings',
     heightM: 7.0,
-    script: 'scripts/blender/prep_lander.py',
+    script: 'scripts/blender/build_lm.py',
   },
   artemis_lander: {
     title: 'Artemis crew lander (concept)',

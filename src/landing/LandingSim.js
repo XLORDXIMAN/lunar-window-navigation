@@ -128,7 +128,7 @@ export class LandingSim {
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x000000) // airless: black sky, no fill light anywhere
-    this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 9000)
+    this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 40000)
     this.camera.position.set(-80, 60, 120)
 
     const sun = (this.sun = new THREE.DirectionalLight(0xfff6ec, 6.0))
@@ -236,7 +236,7 @@ export class LandingSim {
 
   _stars() {
     this.stars = createStarfield(26000, 400)
-    this.stars.scale.setScalar(12) // 4.8 km sphere, inside the far plane
+    this.stars.scale.setScalar(60) // 24 km sphere: beyond the far-field relief, inside the far plane
     this.scene.add(this.stars)
   }
 
@@ -248,7 +248,7 @@ export class LandingSim {
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256)
     const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace
     this.sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, blending: THREE.AdditiveBlending }))
-    this.sunSprite.scale.setScalar(520)
+    this.sunSprite.scale.setScalar(2970)
     this.scene.add(this.sunSprite)
     const earthTex = new THREE.TextureLoader().load('/textures/earth_2k.jpg'); earthTex.colorSpace = THREE.SRGBColorSpace
     this.earth = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), new THREE.MeshStandardMaterial({ map: earthTex, roughness: 0.75, metalness: 0 }))
@@ -266,7 +266,7 @@ export class LandingSim {
    *  seamlessly, rising into massifs whose skyline follows the 360° horizon profile (deg, az 0..359). */
   _buildHorizon(profile) {
     if (this.horizonRing) { this.scene.remove(this.horizonRing); this.horizonRing.geometry.dispose() }
-    const R0 = 430, R1 = 4500, RINGS = 140, SEG = 720
+    const R0 = 430, R1 = 12000, RINGS = 170, SEG = 720
     // smoothed skyline (±12°) so distant massifs read as one continuous range, not floating slivers
     const prof = profile?.length ? profile.map((_, i) => { let s = 0; for (let k = -12; k <= 12; k++) s += profile[(i + k + profile.length) % profile.length]; return s / 25 }) : null
     const pad = this.padY ?? 0, eye = pad + 2
@@ -297,7 +297,7 @@ export class LandingSim {
     }
     for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) {
       const a = i * SEG + j, b = i * SEG + ((j + 1) % SEG), c = a + SEG, d = b + SEG
-      idx.push(a, d, b, a, c, d)
+      idx.push(a, b, d, a, d, c) // CCW seen from above (was inverted → culled, the far field never drew)
     }
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals()
@@ -401,8 +401,8 @@ export class LandingSim {
     this._buildLattice()
     this.padY = this._h(0, 0) ?? this.padY
     this.sun.position.copy(sd).multiplyScalar(700); this.sun.target.position.set(0, this.padY ?? 0, 0)
-    this.sunSprite.position.copy(sd).multiplyScalar(3500)
-    const dist = 3000, rad = dist * Math.tan(0.95 * D2R)
+    this.sunSprite.position.copy(sd).multiplyScalar(20000)
+    const dist = 18000, rad = dist * Math.tan(0.95 * D2R)
     this.earth.position.copy(ed).multiplyScalar(dist); this.earth.scale.setScalar(rad)
     this.earthLight.position.copy(ed).multiplyScalar(500)
     this.earthLight.intensity = env.earthEl > -1 ? 0.22 : 0

@@ -221,8 +221,8 @@ addCard({
   key: 'apollo',
   title: 'Apollo Lunar Module',
   chips: [chipFor('apollo_lm')],
-  text: 'Official NASA model, decimated from 97k to 15k triangles and scaled to 7 m. Used when you land at an Apollo site.',
-  script: 'scripts/blender/prep_lander.py apollo_lm.glb --height 7',
+  text: 'Built in Blender after NASA LM drawings: bevelled panels, gold/black Kapton, landing gear with probes, ladder, RCS quads, radar and S-band dish. 22k triangles, 7 m. Used when you land at an Apollo site.',
+  script: 'scripts/blender/build_lm.py',
   animations: [{ id: 'spin', label: 'Turntable', on: true }],
   async build(card) {
     const obj = await modelCard(card, 'apollo_lm', { size: 30 });

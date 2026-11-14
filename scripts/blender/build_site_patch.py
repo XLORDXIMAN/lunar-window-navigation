@@ -60,8 +60,12 @@ def crater_field(x, y, n, rmin, rmax, depth, keep_out, fresh_p=0.3):
         if math.hypot(cx, cy) < keep_out + r or math.hypot(cx, cy) > TAPER1:
             continue
         fresh = rng.random() < fresh_p
-        k = depth * (1.0 if fresh else rng.uniform(0.35, 0.7))     # degraded craters are shallower
-        d = np.hypot(x - cx, y - cy) / r
+        k = depth * (rng.uniform(0.8, 1.15) if fresh else rng.uniform(0.2, 0.65))   # degraded craters are shallower
+        # irregular outline: ellipticity + lumpy rim (no two craters alike)
+        e, th = rng.uniform(0.0, 0.22), rng.uniform(0, math.pi)
+        ang = np.arctan2(y - cy, x - cx)
+        rr = r * (1 + e * np.cos(2 * (ang - th)) + 0.06 * np.sin(ang * rng.integers(3, 7) + rng.uniform(0, 6)))
+        d = np.hypot(x - cx, y - cy) / rr
         bowl = np.where(d < 1, -(1 - d ** 2.2) * k * r, 0)
         rim = (0.06 if fresh else 0.025) * r * np.exp(-((d - 1) ** 2) * (18 if fresh else 7))
         ang = np.arctan2(y - cy, x - cx)
@@ -86,7 +90,7 @@ def build_ground():
                                                   # spacings reads as 'cloth folds' under a grazing Sun
     h += crater_field(x, y, 7, 45, 95, 0.22, 55, 0.5)
     h += crater_field(x, y, 90, 8, 40, 0.24, 34, 0.35)
-    h += crater_field(x, y, 200, 5.0, 10, 0.2, 18, 0.3)   # smaller craters are drawn per-pixel by the shader
+    h += crater_field(x, y, 320, 2.5, 12, 0.2, 14, 0.25)  # smaller craters are drawn per-pixel by the shader
     zone = np.clip(1 - (r - ZONE) / 30, 0, 1) ** 2
     h = h * (1 - zone) + fbm2(x, y, 3, 0.15, 3) * 0.05 * zone
     h -= h[np.argmin(r)]
@@ -134,6 +138,8 @@ def build_rocks(ground):
         rr = math.hypot(x, y)
         if rr > TAPER0 + 60 or rr < 7 + size:
             return
+        if rr < 70 and size > 0.7:                                     # no big slabs next to the lander / camera
+            size = 0.3 + 0.4 * rng.random()
         hit, loc, *_ = ground.ray_cast(Vector((x, y, 400)), Vector((0, 0, -1)))
         if not hit:
             return

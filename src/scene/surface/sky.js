@@ -200,7 +200,7 @@ export class Sky {
     void addPath;
 
     // для сравнения: путь Солнца над Астаной в те же сутки (в тех же азимутах наблюдателя)
-    if (paths.earthCity?.length) {
+    if (false && paths.earthCity?.length) { // removed from the 3D sky (no city mentions on the site)
       const pos = [];
       for (const p of paths.earthCity) {
         dirFromAzEl(frame, p.az, p.el, v);

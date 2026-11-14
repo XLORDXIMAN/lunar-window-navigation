@@ -72,8 +72,9 @@ export function crispLander(object, renderer) {
       if (mm.map) mm.map.anisotropy = 8;
       if (env) { mm.envMap = env; mm.envMapIntensity = gold ? 0.6 : 0.15; }
       if (gold || dark) {
-        mm.normalMap = foilNormal(); mm.normalScale = new THREE.Vector2(0.95, 0.95);
-        mm.metalness = gold ? 0.85 : 0.35; mm.roughness = gold ? 0.32 : 0.45;
+        mm.normalMap = foilNormal(); mm.normalScale = gold ? new THREE.Vector2(0.95, 0.95) : new THREE.Vector2(0.3, 0.3);
+        mm.metalness = gold ? 0.85 : 0.35; mm.roughness = gold ? 0.36 : 0.45;
+        if (gold) mm.color.multiplyScalar(0.78).lerp(new THREE.Color(0.55, 0.36, 0.1), 0.25); // amber Kapton, not yellow paint
       } else {
         // aluminium / white thermal panels: faint quilting so flat facets read as material, not cardboard
         mm.normalMap = foilNormal(); mm.normalScale = new THREE.Vector2(0.18, 0.18);
