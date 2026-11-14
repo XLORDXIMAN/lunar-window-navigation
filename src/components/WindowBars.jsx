@@ -30,9 +30,9 @@ export default function WindowBars() {
     <section className="panel p-3">
       <div className="flex flex-wrap items-center gap-4 mb-2">
         <div className="label">{t('windows', { n: DAYS })}</div>
-        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-amber-400 inline-block" /> {t('lSun')}</span>
-        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-cyan-400 inline-block" /> {t('lLink')}</span>
-        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-green-500 inline-block shadow-[0_0_6px_#22c55e]" /> {t('lBoth')}</span>
+        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-signal inline-block" /> {t('lSun')}</span>
+        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-cobalt-lt inline-block" /> {t('lLink')}</span>
+        <span className="text-xs flex items-center gap-1"><i className="w-3 h-2 rounded-sm bg-go inline-block" /> {t('lBoth')}</span>
       </div>
       <div className="flex flex-col gap-1.5">
         {rows.map((s, idx) => {
@@ -40,14 +40,14 @@ export default function WindowBars() {
           const both = Array.from(m.sun, (v, i) => (v >= 0.5 && m.link[i] ? 1 : 0))
           return (
             <div key={s.id} className="flex items-center gap-2" style={{ animation: `rise .4s ${idx * 0.05}s both` }}>
-              <button className={`w-52 text-left text-xs truncate transition-colors ${s.id === selectedId ? 'text-cyan-300 font-semibold' : 'text-slate-300 hover:text-white'}`} onClick={() => select(s.id)}>{nm(s)}</button>
-              <div className={`relative flex-1 h-8 rounded-md cursor-crosshair bg-white/[.03] ring-1 transition ${s.id === selectedId ? 'ring-cyan-400/40' : 'ring-transparent hover:ring-white/10'}`}
+              <button className={`w-52 text-left text-xs truncate transition-colors ${s.id === selectedId ? 'text-cobalt-lt' : 'text-slate-300 hover:text-white'}`} onClick={() => select(s.id)}>{nm(s)}</button>
+              <div className={`relative flex-1 h-8 rounded-md cursor-crosshair bg-white/[.03] ring-1 transition ${s.id === selectedId ? 'ring-cobalt-lt/60' : 'ring-transparent hover:ring-white/10'}`}
                 onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); select(s.id); setTime(start + ((e.clientX - r.left) / r.width) * DAYS * DAY) }}>
-                <div className="absolute inset-x-0 top-0.5 h-[32%]">{strip(m.sun, 'bg-gradient-to-b from-amber-300 to-amber-500', 0.5)}</div>
-                <div className="absolute inset-x-0 top-[37%] h-[26%]">{strip(both, 'bg-green-500 shadow-[0_0_8px_#22c55e]', 1)}</div>
-                <div className="absolute inset-x-0 bottom-0.5 h-[32%]">{strip(m.link, 'bg-gradient-to-b from-cyan-300 to-cyan-600', 1)}</div>
+                <div className="absolute inset-x-0 top-0.5 h-[32%]">{strip(m.sun, 'bg-signal', 0.5)}</div>
+                <div className="absolute inset-x-0 top-[37%] h-[26%]">{strip(both, 'bg-go', 1)}</div>
+                <div className="absolute inset-x-0 bottom-0.5 h-[32%]">{strip(m.link, 'bg-cobalt-lt', 1)}</div>
                 {[...Array(DAYS)].map((_, d) => d % 7 === 0 && <span key={d} className="absolute top-0 bottom-0 w-px bg-white/10" style={{ left: `${(d / DAYS) * 100}%` }} />)}
-                <div className="absolute -top-1 -bottom-1 w-0.5 bg-white shadow-[0_0_8px_#fff]" style={{ left: `${nowX}%` }} />
+                <div className="absolute -top-1 -bottom-1 w-px bg-ice" style={{ left: `${nowX}%` }} />
               </div>
               <span className="num text-[10px] w-20 text-right"><span className="text-amber-300">{m.sunPct.toFixed(0)}%</span> / <span className="text-cyan-300">{m.linkPct.toFixed(0)}%</span></span>
             </div>

@@ -9,7 +9,7 @@ const evalScenario = (site, time) => {
   const m = windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1)
   return { site, time, m, st: stateAt(site, time), v: verdict(m, site) }
 }
-const LVL = { green: 'text-green-400', yellow: 'text-yellow-400', red: 'text-red-400' }
+const LVL = { green: 'text-go', yellow: 'text-warn', red: 'text-nogo' }
 
 export default function ScenarioCompare() {
   const t = useT(), f = useFmt(), nm = useSiteName()
@@ -32,7 +32,7 @@ export default function ScenarioCompare() {
   const worse = ROWS.filter(([, g, , d]) => (g(B) - g(A)) * d < -1e-6).map(([k]) => t(k))
 
   const Head = ({ e, label, editable, accent }) => (
-    <div className={`flex flex-col gap-1 rounded-lg p-2 border ${accent}`}>
+    <div className={`flex flex-col gap-1 rounded-[var(--radius-btn)] p-3 border ${accent}`}>
       <div className="label">{label}</div>
       {editable ? (
         <div className="flex flex-wrap gap-1 items-center">
@@ -41,9 +41,9 @@ export default function ScenarioCompare() {
           </select>
           {[[-1, 'm1d'], [1, 'p1d'], [7, 'p1w']].map(([d, k]) => <button key={k} className="btn !text-[10px] !px-1.5" onClick={() => setScenarioB({ siteId: siteB.id, time: b.time + d * DAY })}>{t(k)}</button>)}
         </div>
-      ) : <div className="text-sm font-semibold">{nm(e.site)}</div>}
+      ) : <div className="display text-[15px]">{nm(e.site)}</div>}
       <div className="num text-xs text-slate-400">{f.day(e.time)}</div>
-      <div className={`text-xs font-bold ${LVL[e.v.level]}`}>{t(`v.${e.v.level}`)}</div>
+      <div className={`num text-[11px] tracking-[.06em] ${LVL[e.v.level]}`}>{t(`v.${e.v.level}`)}</div>
     </div>
   )
 
@@ -55,8 +55,8 @@ export default function ScenarioCompare() {
       </div>
       <div className="grid grid-cols-[1.1fr_1fr_1fr_.8fr] gap-x-4 gap-y-0 text-sm items-stretch">
         <div />
-        <Head e={A} label={t('scenA')} accent="border-cyan-500/30 bg-cyan-500/5" />
-        <Head e={B} label={t('scenB')} editable accent="border-indigo-500/40 bg-indigo-500/5" />
+        <Head e={A} label={t('scenA')} accent="border-cobalt-lt/50" />
+        <Head e={B} label={t('scenB')} editable accent="border-signal/60" />
         <div className="label self-end pb-2">{t('delta')}</div>
         {ROWS.map(([k, g, fmt, dir], i) => {
           const d = g(B) - g(A), good = d * dir > 1e-6, bad = d * dir < -1e-6
@@ -65,11 +65,11 @@ export default function ScenarioCompare() {
             <div key={k + 'l'} className={`${cell} text-slate-300`} style={{ animation: `rise .35s ${i * 0.04}s both` }}>{t(k)}</div>,
             <div key={k + 'a'} className={`${cell} num px-2`}>{fmt(g(A))}</div>,
             <div key={k + 'b'} className={`${cell} num px-2`}>{fmt(g(B))}</div>,
-            <div key={k + 'd'} className={`${cell} num font-bold ${good ? 'text-green-400' : bad ? 'text-red-400' : 'text-slate-500'}`}>{good ? '▲ ' : bad ? '▼ ' : '= '}{fmt(Math.abs(d))}</div>,
+            <div key={k + 'd'} className={`${cell} num ${good ? 'text-go' : bad ? 'text-nogo' : 'text-fog'}`}>{good ? '▲ ' : bad ? '▼ ' : '= '}{fmt(Math.abs(d))}</div>,
           ]
         })}
       </div>
-      <div className={`mt-3 text-sm rounded-lg px-3 py-2 border ${worse.length === 0 ? 'border-green-500/40 bg-green-500/10 text-green-300' : 'border-red-500/40 bg-red-500/10 text-red-300'}`}>
+      <div className={`mt-3 text-sm rounded-[var(--radius-btn)] px-3 py-2 border ${worse.length === 0 ? 'border-go/50 text-go' : 'border-nogo/50 text-red-300'}`}>
         {worse.length === 0 ? t('allBetter') : t('worseOn', { v: worse.join(', ') })}
       </div>
     </section>

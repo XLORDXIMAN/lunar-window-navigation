@@ -5,11 +5,12 @@
 
 // labels are translated via i18n keys 'cat.<id>'
 export const CATEGORIES = {
-  apollo: { color: '#a78bfa' },
-  artemis: { color: '#22d3ee' },
-  clps: { color: '#f472b6' },
-  intl: { color: '#fb923c' },
-  custom: { color: '#94a3b8' },
+  // ice / cobalt from the visual system; sand + lilac are muted additions (added for LunarWindow)
+  apollo: { color: '#d8eaff' },
+  artemis: { color: '#5b8cff' },
+  clps: { color: '#c8a96e' },
+  intl: { color: '#a58fd6' },
+  custom: { color: '#ff7a45' },
 }
 
 // terrain: 'peak' | 'rim' | 'crater' | 'plain' — only used to shape MOCK horizons

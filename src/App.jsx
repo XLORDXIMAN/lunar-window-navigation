@@ -11,9 +11,10 @@ import SiteCard from './components/SiteCard.jsx'
 import Timeline from './components/Timeline.jsx'
 import WindowBars from './components/WindowBars.jsx'
 import ScenarioCompare from './components/ScenarioCompare.jsx'
+import Hero from './components/Hero.jsx'
+import About from './components/About.jsx'
+import { Reveal } from './lib/ui.jsx'
 import { HOUR } from './lib/ephem.js'
-
-const delay = (s) => ({ animationDelay: `${s}s` })
 
 export default function App() {
   const t = useT()
@@ -46,22 +47,28 @@ export default function App() {
     <>
       <Starfield />
       {boot && <BootScreen onDone={done} />}
-      {!ready ? <div className="h-full grid place-items-center label">{t('loading')}</div> : !boot && (
-        <div className="min-h-full flex flex-col gap-3 p-3 max-w-[1800px] mx-auto">
-          <div className="rise" style={delay(0)}><TopBar /></div>
-          <div className="grid gap-3 grid-cols-1 xl:grid-cols-[290px_1fr_350px]">
-            <div className="rise" style={delay(0.1)}><SiteCatalog /></div>
-            <div className="flex flex-col gap-3 min-w-0">
-              <div className="rise" style={delay(0.2)}><MoonScene /></div>
-              <div className="rise" style={delay(0.3)}><HorizonView /></div>
+      {!ready ? <div className="min-h-screen grid place-items-center label">{t('loading')}</div> : !boot && (
+        <>
+          <Hero />
+          <main id="navigator" className="scroll-mt-2 w-full max-w-[1760px] mx-auto px-3 md:px-4 flex flex-col gap-3">
+            <Reveal><TopBar /></Reveal>
+            <div className="grid gap-3 grid-cols-1 xl:grid-cols-[290px_1fr_350px]">
+              <Reveal delay={0.05}><SiteCatalog /></Reveal>
+              <div className="flex flex-col gap-3 min-w-0">
+                <Reveal delay={0.1}><MoonScene /></Reveal>
+                <Reveal delay={0.15}><HorizonView /></Reveal>
+              </div>
+              <Reveal delay={0.1}><SiteCard /></Reveal>
             </div>
-            <div className="rise" style={delay(0.15)}><SiteCard /></div>
-          </div>
-          <div className="rise" style={delay(0.4)}><Timeline /></div>
-          <div className="rise" style={delay(0.5)}><WindowBars /></div>
-          <div className="rise" style={delay(0.6)}><ScenarioCompare /></div>
-          <footer className="label text-center py-3 opacity-70">{t('footer')}</footer>
-        </div>
+            <Reveal><Timeline /></Reveal>
+            <Reveal><WindowBars /></Reveal>
+            <Reveal><ScenarioCompare /></Reveal>
+          </main>
+          <div className="w-full max-w-[var(--page-max-width)] mx-auto px-4 md:px-8"><About /></div>
+          <footer className="border-t border-[var(--color-line)]">
+            <div className="max-w-[var(--page-max-width)] mx-auto px-4 md:px-8 py-8 label text-center">{t('footer')}</div>
+          </footer>
+        </>
       )}
     </>
   )

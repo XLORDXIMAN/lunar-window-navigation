@@ -18,13 +18,13 @@ export default function Starfield() {
       ctx.clearRect(0, 0, w, h)
       for (const s of stars) {
         const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t / 1000 * s.s + s.p))
-        ctx.fillStyle = s.hue ? `hsla(${s.hue},90%,80%,${a})` : `rgba(255,255,255,${a})`
+        ctx.fillStyle = s.hue === 200 ? `rgba(91,140,255,${a})` : `rgba(216,234,255,${a * 0.85})`
         ctx.beginPath(); ctx.arc(s.x, s.y + Math.sin(t / 20000 + s.p) * 2, s.r, 0, 6.28); ctx.fill()
       }
       if (!shoot && Math.random() < 0.004) shoot = { x: Math.random() * w, y: Math.random() * h * 0.5, vx: (6 + Math.random() * 6) * devicePixelRatio, vy: (2 + Math.random() * 3) * devicePixelRatio, life: 1 }
       if (shoot) {
         const g = ctx.createLinearGradient(shoot.x, shoot.y, shoot.x - shoot.vx * 14, shoot.y - shoot.vy * 14)
-        g.addColorStop(0, `rgba(255,255,255,${shoot.life})`); g.addColorStop(1, 'rgba(255,255,255,0)')
+        g.addColorStop(0, `rgba(216,234,255,${shoot.life})`); g.addColorStop(1, 'rgba(216,234,255,0)')
         ctx.strokeStyle = g; ctx.lineWidth = 1.5 * devicePixelRatio
         ctx.beginPath(); ctx.moveTo(shoot.x, shoot.y); ctx.lineTo(shoot.x - shoot.vx * 14, shoot.y - shoot.vy * 14); ctx.stroke()
         shoot.x += shoot.vx; shoot.y += shoot.vy; shoot.life -= 0.015

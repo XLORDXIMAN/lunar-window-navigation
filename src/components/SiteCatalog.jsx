@@ -5,7 +5,7 @@ import { windowMetrics, verdict, score } from '../lib/ephem.js'
 import { useT } from '../lib/i18n.js'
 import { useSiteName, AnimNum } from '../lib/ui.jsx'
 
-const DOT = { green: 'bg-green-500 shadow-[0_0_8px_#22c55e]', yellow: 'bg-yellow-500 shadow-[0_0_8px_#eab308]', red: 'bg-red-500 shadow-[0_0_8px_#ef4444]' }
+const DOT = { green: 'bg-go', yellow: 'bg-warn', red: 'bg-nogo' }
 
 export default function SiteCatalog() {
   const t = useT(), nm = useSiteName()
@@ -26,7 +26,7 @@ export default function SiteCatalog() {
 
   return (
     <aside className="panel p-3 flex flex-col gap-3 xl:max-h-[calc(100vh-110px)] overflow-auto">
-      <div className="label">{t('sites')} <span className="text-cyan-400">· {sites.length}</span></div>
+      <div className="label">{t('sites')} <span className="text-cobalt-lt">· {sites.length}</span></div>
       <input className="field text-sm" placeholder={t('search')} value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="flex flex-wrap gap-1">
         {['all', ...Object.keys(CATEGORIES)].map((c) => (
@@ -40,12 +40,12 @@ export default function SiteCatalog() {
       <ul className="flex flex-col gap-0.5">
         {list.map(({ s, v }, i) => (
           <li key={s.id} style={{ animation: `rise .4s ${i * 0.03}s both` }}
-            className={`group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm transition-all duration-200 ${s.id === selectedId ? 'bg-cyan-400/10 ring-1 ring-cyan-400/50 translate-x-1' : 'hover:bg-white/5 hover:translate-x-0.5'}`}
+            className={`group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm transition-all duration-200 ${s.id === selectedId ? 'bg-cobalt/15 ring-1 ring-cobalt-lt/70 translate-x-1' : 'hover:bg-white/[.04] hover:translate-x-0.5'}`}
             onClick={() => select(s.id)}>
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 transition-colors ${DOT[v.level]}`} />
             <span className={`flex-1 truncate ${s.id === selectedId ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>{nm(s)}</span>
             <span className="w-1 h-4 rounded" style={{ background: CATEGORIES[s.category].color }} />
-            <input type="checkbox" className="accent-cyan-400" checked={compareIds.includes(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggleCompare(s.id)} />
+            <input type="checkbox" checked={compareIds.includes(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggleCompare(s.id)} />
           </li>
         ))}
       </ul>
@@ -65,16 +65,16 @@ export default function SiteCatalog() {
           <label key={k} className="flex items-center gap-2 text-xs">
             <span className="w-28 text-slate-300">{t(`w.${k}`)}</span>
             <input type="range" min="0" max="5" value={weights[k]} onChange={(e) => setWeight(k, +e.target.value)} className="flex-1" />
-            <span className="num w-3 text-cyan-300">{weights[k]}</span>
+            <span className="num w-3 text-cobalt-lt">{weights[k]}</span>
           </label>
         ))}
         <div className="label mt-2">{t('top3')}</div>
         {top3.map(({ s, sc }, i) => (
-          <button key={s.id} className="flex items-center gap-2 text-sm text-left rounded-md px-2 py-1.5 bg-white/[.03] hover:bg-white/[.07] transition-all"
+          <button key={s.id} className="flex items-center gap-2 text-sm text-left rounded-[var(--radius-tag)] px-2 py-1.5 border border-[var(--color-line)] hover:border-[var(--color-line-hi)] transition-all"
             style={{ animation: `rise .35s ${i * 0.08}s both` }} onClick={() => select(s.id)}>
-            <span className="text-base">{['🥇', '🥈', '🥉'][i]}</span>
+            <span className="num text-[11px] text-fog w-5">0{i + 1}</span>
             <span className="flex-1 truncate">{nm(s)}</span>
-            <span className="num text-green-400 font-bold"><AnimNum value={sc} /></span>
+            <span className="num text-ice"><AnimNum value={sc} /></span>
           </button>
         ))}
         {kids && <div className="kids">{t('kids.priorities')}</div>}

@@ -1,5 +1,6 @@
-node_modules
-dist
 .DS_Store
-.vercel
 .claude/
+.vercel
+design/
+dist
+node_modules

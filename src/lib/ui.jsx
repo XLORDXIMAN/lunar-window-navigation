@@ -29,3 +29,17 @@ export function AnimNum({ value, digits = 0, prefix = '', suffix = '', signed = 
 
 export const siteName = (s, lang) => (lang === 'ru' && s.nameRu ? s.nameRu : s.name)
 export const useSiteName = () => { const lang = useStore((s) => s.lang); return (s) => siteName(s, lang) }
+
+// Scroll reveal: fade + rise once the block enters the viewport (stagger via `delay`, seconds)
+export function Reveal({ children, delay = 0, className = '', ...rest }) {
+  const ref = useRef(null)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect() } }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return <div ref={ref} className={`reveal ${on ? 'in' : ''} ${className}`} style={{ transitionDelay: `${delay}s` }} {...rest}>{children}</div>
+}

@@ -12,8 +12,8 @@ export default function Timeline() {
   return (
     <section className="panel px-4 py-3 flex flex-wrap items-center gap-4">
       <button onClick={() => setPlaying(!playing)}
-        className={`relative w-11 h-11 rounded-full grid place-items-center text-lg transition-all ${playing ? 'bg-cyan-400/20 text-cyan-200 shadow-[0_0_24px_-2px_#22d3ee]' : 'bg-white/5 text-white hover:bg-cyan-400/10 hover:shadow-[0_0_18px_-4px_#22d3ee]'}`}>
-        {playing && <span className="absolute inset-0 rounded-full border border-cyan-300/60" style={{ animation: 'spin 2s linear infinite', borderTopColor: 'transparent' }} />}
+        className={`relative w-11 h-11 rounded-full grid place-items-center text-lg border border-signal text-signal transition-colors ${playing ? 'bg-signal/15' : 'hover:bg-signal/10'}`}>
+        {playing && <span className="absolute inset-0 rounded-full border border-signal/70" style={{ animation: 'spin 2s linear infinite', borderTopColor: 'transparent' }} />}
         {playing ? '⏸' : '▶'}
       </button>
       <div className="flex gap-1">
@@ -28,12 +28,12 @@ export default function Timeline() {
           {Array.from({ length: lunarDays + 1 }, (_, i) => (
             <span key={i} className="absolute top-0 h-4 w-px bg-white/15" style={{ left: `${((i * SYNODIC_H * HOUR) / (end - rangeStart)) * 100}%` }} />
           ))}
-          <span className="absolute -top-2 h-8 w-0.5 bg-cyan-300 shadow-[0_0_10px_#22d3ee]" style={{ left: `${pct}%` }} />
+          <span className="absolute -top-2 h-8 w-px bg-cobalt-lt" style={{ left: `${pct}%` }} />
         </div>
         <input type="range" className="w-full relative" min={rangeStart} max={end} step={HOUR} value={time} onChange={(e) => setTime(+e.target.value)} />
       </div>
       <span className="num text-xs text-slate-400">{f.day(end)}</span>
-      <span className="num text-cyan-300 text-sm w-[175px] text-right drop-shadow-[0_0_6px_#22d3ee]">{f.dt(time)}</span>
+      <span className="num text-cobalt-lt text-[13px] w-[175px] text-right">{f.dt(time)}</span>
       <span className="hidden 2xl:inline label !text-[9px]">space ▶ · ← → ±1d</span>
     </section>
   )
