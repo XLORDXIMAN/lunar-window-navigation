@@ -219,10 +219,10 @@ export function Info() {
 
       <section id="go" className="pt-[180px] pb-[120px]">
         <div className="wrap">
-          <Reveal className="text-center mb-14"><h2 className="h-section !font-normal">{t('close.title')}</h2></Reveal>
+          <Reveal className="text-center mb-14"><h2 data-sfx="head" className="h-section !font-normal">{t('close.title')}</h2></Reveal>
           <div className="mx-auto max-w-[940px] grid md:grid-cols-2 gap-6">
             {[['navigator', t('close.a1'), t('close.a2'), 'nav'], ['scenario', t('close.b1'), t('close.b2'), 'slip']].map(([id, h, p, kind]) => (
-              <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} className="lux-glass reg-dots h-[332px] flex flex-col justify-end items-center text-center p-8 overflow-hidden">
+              <button key={id} data-sfx="rise" style={{ '--speed': id === 'navigator' ? '200px' : '300px' }} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} className="lux-glass reg-dots h-[332px] flex flex-col justify-end items-center text-center p-8 overflow-hidden">
                 <Emblem kind={kind} />
                 <div className="lux-h-card mt-6">{h}</div>
                 <div className="text-[15px] lux-muted mt-2">{p}</div>

@@ -63,23 +63,23 @@ export default function Columns() {
   return (
     <section id="columns" className="py-[var(--section-gap)]">
       <div className="wrap">
-        <Reveal className="text-center mb-14 flex flex-col items-center gap-4">
+        <Reveal className="text-center mb-14"><div data-sfx="head" className="flex flex-col items-center gap-4">
           <div className="eyebrow">{t('cols.kicker')}</div>
           <h2 className="h-section max-w-[720px]">{t('bento.title').replace(/\*/g, '')}</h2>
           <p className="lux-body max-w-[460px]">{t('bento.sub')}</p>
-        </Reveal>
+        </div></Reveal>
         <div className="mx-auto max-w-[1076px] grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {items.map(([word, , stat, note], i) => {
             const Inst = inst[i]
             return (
-              <Reveal key={i} delay={i * 0.06} className="glass reg-dots h-[300px] flex flex-col overflow-hidden">
+              <div key={i} data-sfx="rise" style={{ '--speed': `${180 + i * 70}px` }}><Reveal delay={i * 0.06} className="glass reg-dots h-[300px] flex flex-col overflow-hidden">
                 <div className="flex-1 p-4 [mask-image:radial-gradient(80%_80%_at_50%_45%,black,transparent)]"><Inst /></div>
                 <div className="px-5 pb-6 text-center">
                   <div className={`font-display text-[30px] font-medium leading-none ${i === 0 ? 'grad-sun' : i === 1 ? 'grad-earth' : 'lux-h'}`}>{stat}</div>
                   <div className="text-[15px] text-[var(--lux-hi)] mt-3">{word}</div>
                   <div className="text-[13px] lux-muted mt-1">{note}</div>
                 </div>
-              </Reveal>
+              </Reveal></div>
             )
           })}
         </div>

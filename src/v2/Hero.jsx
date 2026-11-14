@@ -147,11 +147,11 @@ export default function Hero() {
   const t = useT()
   const caps = t('hero5.caps')
   return (
-    <section id="top" className="relative overflow-hidden">
+    <section id="top" data-sfx="hero" className="relative overflow-hidden">
       <Lattice />
       <div className="relative z-10"><Nav /></div>
 
-      <div className="relative z-10 wrap flex flex-col items-center text-center pt-[clamp(32px,8vh,96px)]">
+      <div className="sfx-title relative z-10 wrap flex flex-col items-center text-center pt-[clamp(32px,8vh,96px)]">
         <div className="eyebrow lux-in" style={{ animationDelay: '.1s' }}>{t('hero5.eyebrow')}</div>
         <h1 className="h-display mt-8 lux-in" style={{ animationDelay: '.2s' }}>LunarWindow</h1>
         <p className="lux-promise mt-7 max-w-[640px] lux-in" style={{ animationDelay: '.45s' }}>
@@ -161,7 +161,7 @@ export default function Hero() {
 
       <div className="relative mt-16">
         <Spotlights />
-        <div className="relative z-10 wrap lux-in" style={{ animationDelay: '.7s' }}><ProductFan /></div>
+        <div className="relative z-10 wrap lux-in" style={{ animationDelay: '.7s' }}><div data-sfx="tilt"><ProductFan /></div></div>
       </div>
 
       <div className="relative z-10 wrap mt-6 pb-[var(--section-gap)]">

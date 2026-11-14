@@ -3,7 +3,8 @@ import { useStore, loadSites } from './store.js'
 import { useT } from './lib/i18n.js'
 import { HOUR } from './lib/ephem.js'
 import Intro from './components/VideoIntro.jsx'
-import StarSky from './v2/StarSky.jsx'
+import GalaxySky from './v2/GalaxySky.jsx'
+import { useScrollFX } from './v2/scrollfx.js'
 import Hero from './v2/Hero.jsx'
 import Columns from './v2/Columns.jsx'
 import Navigator from './v2/Navigator.jsx'
@@ -17,6 +18,7 @@ export default function App() {
   const [site, setSite] = useState(false)  // site mounted (during the intro's exit transition)
   const reveal = useCallback(() => setSite(true), [])
   const done = useCallback(() => { setSite(true); setBoot(false) }, [])
+  useScrollFX()
 
   useEffect(() => { loadSites().then(({ sites, mock }) => useStore.getState().setSites(sites, mock)) }, [])
 
@@ -40,7 +42,8 @@ export default function App() {
 
   return (
     <>
-      <StarSky />
+      <GalaxySky />
+      <div id="sfx-progress" aria-hidden="true" />
       {boot && <Intro onReveal={reveal} onDone={done} />}
       {!site ? null : !ready ? <div className="min-h-screen grid place-items-center mono text-fog">{t('loading')}</div> : (
         <main>

@@ -16,7 +16,7 @@ const VDOT = { green: 'bg-go', yellow: 'bg-warn', red: 'bg-nogo' }
 
 export function SectionHead({ kicker, title, sub, right }) {
   return (
-    <div className="flex flex-col items-center text-center gap-4 mb-14">
+    <div data-sfx="head" className="flex flex-col items-center text-center gap-4 mb-14">
       <div className="eyebrow">{kicker}</div>
       <h2 className="h-section max-w-[900px] [text-wrap:balance]">{title.split('*').map((p, i) => <span key={i}>{p}</span>)}</h2>
       {sub && <p className="lux-body max-w-[460px]">{sub}</p>}
