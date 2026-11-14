@@ -161,7 +161,7 @@ export class Sky {
     this.star.material.opacity = 0.3 * fade;
     for (const g of this.ghosts) {
       place(g, ndc.x * g.userData.k, ndc.y * g.userData.k, g.userData.size * 2);
-      g.material.opacity = 0.07 * fade;
+      g.material.opacity = 0; // ghost rings read as banding artifacts
     }
   }
 
@@ -208,7 +208,7 @@ export class Sky {
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      const l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: 0xff9a6a, dashSize: R * 0.02, gapSize: R * 0.015, transparent: true, opacity: 0.22, depthWrite: false }));
+      const l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: 0xff9a6a, dashSize: R * 0.02, gapSize: R * 0.015, transparent: true, opacity: 0, depthWrite: false }));
       l.computeLineDistances();
       l.frustumCulled = false;
       this.dome.add(l);
@@ -251,8 +251,8 @@ function line(positions, colors, color, opacity, onTop) {
     color: colors ? 0xffffff : color,
     vertexColors: !!colors,
     transparent: true,
-    opacity: opacity * 0.55, // integration: guides stay readable but no longer dominate the sky
-    depthTest: !onTop,
+    opacity: opacity * 0.3, // integration: faint data guides, not the subject of the shot
+    depthTest: true, // integration: guides never draw over the lander or terrain
     depthWrite: false,
   });
   const l = new THREE.Line(g, m);

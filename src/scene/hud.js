@@ -118,12 +118,12 @@ export class Hud {
     const sun = this.q('[data-sun]');
     sun.className = `hud-line ${sunVisible ? 'ok' : 'bad'}`;
     sun.innerHTML = sunVisible
-      ? `<b>☀ Sun ${fmtDeg(c.sunEl)}</b> above horizon${c.sunVisibleFraction < 0.999 ? ` · ${Math.round(c.sunVisibleFraction * 100)}% of disk` : ''}`
-      : `<b>☀ Sun hidden</b> · ${c.sunEl < 0 ? `${fmtDeg(c.sunEl)} below horizon` : `behind terrain (${fmtDeg(sunAboveTerrain)})`}`;
+      ? `<b>☀ Солнце ${fmtDeg(c.sunEl)}</b> над горизонтом${c.sunVisibleFraction < 0.999 ? ` · ${Math.round(c.sunVisibleFraction * 100)}% диска` : ''}`
+      : `<b>☀ Солнце не видно</b> · ${c.sunEl < 0 ? `${fmtDeg(c.sunEl)} под горизонтом` : `за рельефом (${fmtDeg(sunAboveTerrain)})`}`;
     const earthVisible = c.earthVisibleFraction > 0.001;
     const earth = this.q('[data-earth]');
     earth.className = `hud-line ${earthVisible ? 'ok' : 'bad'}`;
-    earth.innerHTML = earthVisible ? `<b>🌍 Earth ${fmtDeg(c.earthEl)}</b> · direct link` : `<b>🌍 Earth hidden</b> · no direct link`;
+    earth.innerHTML = earthVisible ? `<b>🌍 Земля ${fmtDeg(c.earthEl)}</b> · прямая связь` : `<b>🌍 Земля за горизонтом</b> · нет прямой связи`;
     const range = c.horizonRangeKm ? ` (terrain modeled to ${Math.round(c.horizonRangeKm)} km)` : '';
     this.q('[data-note]').textContent = c.terrainModeled
       ? `Horizon from LOLA terrain${range} · no atmosphere, no refraction`

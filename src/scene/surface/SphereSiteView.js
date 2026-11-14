@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { Sky } from './sky.js';
+import { crispLander } from '../landerLook.js';
 import { latLonToVector } from '../coords.js';
 import { siteFrame } from './horizon.js';
 import { R_KM } from '../polar/PolarData.js';
@@ -127,7 +128,7 @@ export class SphereSiteView {
     this.sunLight.intensity = 4.4 * THREE.MathUtils.smoothstep(sl.y, -0.01, 0.02);
     this.earthLight.position.copy(this.dirToLocal(earthDir)).multiplyScalar(100);
     // earthshine (+ a floor so shadowed rocks keep a hint of form, like an exposed Apollo frame)
-    this.earthLight.intensity = Math.max(this.sunLight.intensity * (this.earthshineRatio ?? 0.015) * sub.earthPhase, 0.42);
+    this.earthLight.intensity = Math.max(this.sunLight.intensity * (this.earthshineRatio ?? 0.015) * sub.earthPhase, 0.22);
     this.sky.update(this.camera, {
       sunDirMoon: sunDir,
       earthDirMoon: earthDir,
@@ -144,7 +145,7 @@ export class SphereSiteView {
     object.position.set(0, 0, 0);
     object.quaternion.identity();
     object.scale.setScalar(0.001);
-    object.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } });
+    crispLander(object, this.renderer);
     this.models.add(object);
   }
 }
@@ -262,7 +263,7 @@ function rockMaterial() {
   const m = new THREE.MeshStandardMaterial({ map: GROUND_TEX, color: 0xffffff, roughness: 0.95, metalness: 0 })
   m.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-diffuseColor.rgb = min(diffuseColor.rgb * 3.6, vec3(.95));`)
+diffuseColor.rgb = min(diffuseColor.rgb * 2.6, vec3(.9));`)
   }
   return m
 }
@@ -307,11 +308,12 @@ float PX = 0.; // metres per pixel at this fragment (set in main)
 float aa(float scale){ return 1. - smoothstep(scale * .06, scale * .22, PX); }
 float regH(vec2 p){ float h = 0., w;
   float pk = patchK(p);
-  w = aa(1.2); if (w > 0.) h += craters(p, 1.2) * .08 * w;
-  w = aa(3.);  if (w > 0.) h += craters(p, 3.) * .25 * w;
-  w = aa(9.);  if (w > 0.) h += craters(p, 9.) * .45 * w;
+  w = aa(1.2); if (w > 0.) h += craters(p, 1.2) * .1 * w;
+  w = aa(3.);  if (w > 0.) h += craters(p, 3.) * .14 * w;   // shallow, degraded: per-pixel bowls must not read as black decals
+  w = aa(9.);  if (w > 0.) h += craters(p, 9.) * .3 * w;
+  w = aa(25.); if (w > 0.) h += craters(p * 1.07 + 31., 25.) * 1.1 * w;
   w = (1. - pk) * aa(70.); if (w > 0.) h += craters(p, 70.) * 1.6 * w;
-  w = aa(1.6); if (w > 0.) h += fbm(p * .6) * .25 * w;
+  w = aa(1.6); if (w > 0.) h += fbm(p * .6) * .07 * w;
   w = aa(.15); if (w > 0.) h += fbm(p * 7.) * .04 * w;
   return h; }
 float bigH(vec2 p){ float k = 1. - patchK(p), h = fbm(p * .0025) * 4.;
@@ -322,15 +324,20 @@ float bigH(vec2 p){ float k = 1. - patchK(p), h = fbm(p * .0025) * 4.;
 float camD = length(vViewPosition);
 PX = length(fwidth(vLocalM.xz));
 float fineFade = 1. - smoothstep(30., 400., camD);
-float grain = mix(1., mix(.8, 1.16, fbm(vLocalM.xz * 4.)), aa(.25)) * mix(1., mix(.9, 1.1, fbm(vLocalM.xz * .35)), aa(3.));
+float grain = mix(1., mix(.7, 1.22, fbm(vLocalM.xz * 4.)) * mix(.85, 1.12, vnoise(vLocalM.xz * 11.)), aa(.25)) * mix(1., mix(.9, 1.1, fbm(vLocalM.xz * .35)), aa(3.));
 diffuseColor.rgb *= grain;
 // pebbles and small rocks near the eye (Apollo-photo look)
 vec2 pc = floor(vLocalM.xz * 3.); float pr = h21(pc);
-if (pr > .972) diffuseColor.rgb *= mix(1., pr > .99 ? 1.45 : .55, smoothstep(.0, .5, 1. - length(fract(vLocalM.xz * 3.) - .5) * 2.) * aa(.35));
+if (pr > .955) diffuseColor.rgb *= mix(1., pr > .99 ? 1.45 : .55, smoothstep(.0, .5, 1. - length(fract(vLocalM.xz * 3.) - .5) * 2.) * aa(.35));
 float pk = patchK(vLocalM.xz);
+// mid-scale albedo so the ground stays crisp from 100–1000 m up (fresh rims bright, bowls darker, patchy maturity)
+{ float w25 = aa(25.), w9 = aa(9.);
+  if (w25 > 0.) diffuseColor.rgb *= 1. + craters(vLocalM.xz * 1.07 + 31., 25.) * .35 * w25;
+  if (w9 > 0.) diffuseColor.rgb *= 1. + craters(vLocalM.xz, 9.) * .15 * w9;
+  diffuseColor.rgb *= mix(.9, 1.1, fbm(vLocalM.xz * .021)) * mix(.92, 1.06, fbm(vLocalM.xz * .0065 + 7.)); }
 diffuseColor.rgb *= 1. + craters(vLocalM.xz, 70.) * .08 * (1. - smoothstep(400., 4000., camD)) * (1. - pk);
 diffuseColor.rgb *= 1. + craters(vLocalM.xz, 320.) * .05 * (1. - pk) + (fbm(vLocalM.xz * .003) - .5) * .2; // ejecta brightening / mare tone
-diffuseColor.rgb = min(diffuseColor.rgb * 2.7, vec3(.95)); // mare albedo is low (~0.07): expose like the Apollo Hasselblad frames`)
+diffuseColor.rgb = min(diffuseColor.rgb * 2.45, vec3(.95)); // mare albedo is low (~0.07): expose like the Apollo Hasselblad frames`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 { // one height evaluation per pixel, gradient from screen-space derivatives (was 3 full evaluations)
   vec2 q = vLocalM.xz;

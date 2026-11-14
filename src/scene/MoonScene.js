@@ -16,6 +16,7 @@ import { loadPatch, loadPolarData, PolarData, PoleFrame, R_KM, TerrainStack } fr
 const PolarData_latLonToMap = (lat, lon) => PolarData.latLonToMap(lat, lon);
 import { PolarView, aimPanels } from './polar/PolarView.js';
 import { SphereSiteView } from './surface/SphereSiteView.js';
+import { crispLander } from './landerLook.js';
 import { azEl, horizonAt, horizonProfile, siteConditions, siteFrame, EYE_HEIGHT_KM } from './surface/horizon.js';
 import { SiteActors } from './surface/siteActors.js';
 import { setPointScale } from './effects.js';
@@ -156,6 +157,7 @@ export class MoonScene {
 
     // --- локальные сцены ---
     this.sphereView = new SphereSiteView({ onAssetError });
+    this.sphereView.renderer = this.renderer;
     this.actors = new SiteActors({ unit: 0.001 });
     this.polarReady = loadPolarData(this.options.quality === 'low' ? 512 : 1024).then((polar) => {
       if (!polar || this.disposed) return null;
@@ -764,7 +766,7 @@ export class MoonScene {
       const ea = azEl(frame, latLonToVector(sub.earthLat, sub.earthLon, sub.earthDistKm).sub(eye));
       const day = (k * 2) / 24;
       const above = sa.el > horizonAt(profile, sa.az);
-      paths.sun.push({ ...sa, label: k > 0 && day % 3 === 0 && above ? `+${day}d` : null });
+      paths.sun.push({ ...sa, label: null });
       paths.earth.push(ea);
     }
     paths.earthCity = earthCitySunPath(this.date);
@@ -1085,7 +1087,7 @@ export class MoonScene {
     if (lander) {
       lander.position.set(0, 0, 0);
       lander.scale.setScalar(0.001);
-      lander.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } });
+      crispLander(lander, this.renderer);
       v.models.add(lander);
       this._attachPlume(lander);
       lander.userData.fx = new LanderFx(lander, { unit: 0.001 });
@@ -1125,6 +1127,9 @@ export class MoonScene {
     const up = new THREE.Vector3(0, 1, 0);
     const approach = new THREE.Vector3(L.dir[0], 0, -L.dir[1]).normalize();
     const side = new THREE.Vector3().crossVectors(approach, up).normalize();
+    // chase from the sunward side so the lander is lit, not a silhouette
+    if (L.sunSide == null) { const sl = v.dirToLocal(latLonToVector(this.sub.sunLat, this.sub.sunLon)); L.sunSide = side.dot(sl) >= 0 ? 1 : -1; }
+    side.multiplyScalar(L.sunSide);
     const firing = s.phase === 'APPROACH' || s.phase === 'VERTICAL';
     if (L.lander) {
       const T = s.thrust;
@@ -1143,7 +1148,7 @@ export class MoonScene {
     }
     {
       const gy = L.groundZ(s.pos[0], s.pos[1]) / 1000;
-      L.skirt.position.set(pos.x, gy + 0.00015, pos.z);
+      L.skirt.position.set(pos.x, gy + 0.0006, pos.z); // above the micro-relief: log-depth ignores polygonOffset
       L.skirt.userData.drive(firing && s.alt < 30 ? s.throttle * Math.pow(1 - s.alt / 30, 1.5) * 1.3 : 0, now / 1000);
     }
     if (firing && s.alt < 25) v.dust.emit(L.groundZ(s.pos[0], s.pos[1]) / 1000, s.throttle * (1 - s.alt / 25), dt * scale);

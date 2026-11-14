@@ -422,3 +422,47 @@ a.lux-glass:hover, button.lux-glass:hover { background: rgba(186,207,247,.04); b
 /* integration: cinematic landing — no developer strings over the shot */
 #moon.is-landing .moon-hud .hud-badge, #moon.is-landing .moon-hud .hud-note-line, #moon.is-landing .moon-hud .hud-readout { opacity: 0 !important; transition: opacity .4s; }
 #moon .moon-hud .hud-badge, #moon .moon-hud .hud-note-line, #moon .moon-hud .hud-caption { display: none !important; }
+
+/* ---------- integration: priority sliders (gradient track, glowing knob with ‹ › arrows, ticks) ---------- */
+.lux-range-wrap { position: relative; display: block; height: 28px; }
+input.lux-range { -webkit-appearance: none; appearance: none; position: absolute; inset: 0; width: 100%; height: 28px; background: transparent; cursor: grab; margin: 0; z-index: 2; }
+input.lux-range:active { cursor: grabbing; }
+input.lux-range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px;
+  background: linear-gradient(90deg, #4f7cff 0%, #8b7bff calc(var(--v) * .6), #ff9a5a var(--v), rgba(255,255,255,.09) var(--v));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 0 18px -6px rgba(110,140,255,.7); }
+input.lux-range::-moz-range-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,.09); }
+input.lux-range::-moz-range-progress { height: 6px; border-radius: 999px; background: linear-gradient(90deg, #4f7cff, #ff9a5a); }
+input.lux-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -12px; border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath d='M12 10l-4 5 4 5M18 10l4 5-4 5' fill='none' stroke='%230b1020' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat,
+    radial-gradient(circle at 35% 30%, #ffffff, #dfe6ff 55%, #b9c6ff);
+  box-shadow: 0 0 0 4px rgba(120,150,255,.22), 0 6px 18px rgba(40,60,160,.55), 0 0 22px rgba(255,170,110,.35);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1.4), box-shadow .2s; }
+input.lux-range:hover::-webkit-slider-thumb { transform: scale(1.08); box-shadow: 0 0 0 7px rgba(120,150,255,.22), 0 6px 22px rgba(40,60,160,.6), 0 0 28px rgba(255,170,110,.5); }
+input.lux-range:active::-webkit-slider-thumb { transform: scale(.94); }
+input.lux-range::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #b9c6ff); box-shadow: 0 0 0 4px rgba(120,150,255,.22), 0 6px 18px rgba(40,60,160,.55); }
+input.lux-range:focus-visible { outline: none; }
+input.lux-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(79,124,255,.6); }
+.lux-range-ticks { position: absolute; left: 15px; right: 15px; top: 50%; display: flex; justify-content: space-between; transform: translateY(9px); pointer-events: none; z-index: 1; }
+.lux-range-ticks i { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.22); transition: background .2s; }
+.lux-range-ticks i.on { background: rgba(170,190,255,.9); }
+.lux-range-val { display: inline-grid; place-items: center; height: 26px; min-width: 32px; border-radius: 999px; font-size: 13px; color: #fff;
+  background: linear-gradient(135deg, rgba(79,124,255,.35), rgba(255,154,90,.3)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+
+/* ---------- integration: glass check toggles for site comparison ---------- */
+.lux-check { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 8px; cursor: pointer; position: relative; flex: none;
+  background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.22); transition: background .25s, box-shadow .25s, transform .15s; }
+.lux-check:hover { box-shadow: inset 0 0 0 1.5px rgba(150,175,255,.7), 0 0 14px -2px rgba(110,140,255,.6); }
+.lux-check:active { transform: scale(.9); }
+.lux-check::after { content: ''; position: absolute; left: 8px; top: 4px; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.4px 2.4px 0;
+  transform: rotate(45deg) scale(0); transform-origin: 60% 60%; transition: transform .28s cubic-bezier(.2,.9,.3,1.5); }
+.lux-check:checked { background: linear-gradient(135deg, #4f7cff, #8b6bff 60%, #ff9a5a); box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 4px 16px -4px rgba(110,120,255,.8); }
+.lux-check:checked::after { transform: rotate(45deg) scale(1); }
+.lux-check:focus-visible { outline: 2px solid #9fb4ff; outline-offset: 2px; }
+
+/* integration: Sun/Earth readout in the site's glass style and display font */
+#moon .moon-hud .hud-readout { background: rgba(14,18,30,.42); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border-radius: 18px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 0 10px 40px -10px rgba(0,0,0,.6); padding: 12px 22px; min-width: 0; }
+#moon .moon-hud .hud-line { font-size: 14px; color: rgba(255,255,255,.72); }
+#moon .moon-hud .hud-line b { font-family: var(--font-display, inherit); font-weight: 500; font-size: 19px; letter-spacing: -.01em; }
+#moon .moon-hud .hud-line.ok b { color: #ffcf7a; }

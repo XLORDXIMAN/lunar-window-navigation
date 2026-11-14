@@ -17,8 +17,10 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createStarfield } from '../scene/starfield.js'
 import { createFirePlume, createDustSkirt } from '../scene/firePlume.js'
+import { crispLander } from '../scene/landerLook.js'
 
 export const G = 1.62
 const D2R = Math.PI / 180
@@ -72,10 +74,11 @@ function regolith(mat, { bakedLum = true, gain = 1 } = {}) {
       .replace('#include <map_fragment>', `#include <map_fragment>
 { float camD = length(vViewPosition);
   ${bakedLum ? 'float lum = dot(diffuseColor.rgb, vec3(.299, .587, .114)); diffuseColor.rgb = vec3(.205, .2, .192) * clamp(lum / .034, .6, 1.5);' : ''}
-  float near = 1. - smoothstep(25., 260., camD);
+  float PX = length(fwidth(vWp.xz));
+  float near = (1. - smoothstep(25., 260., camD)) * (1. - smoothstep(.03, .09, PX));
   diffuseColor.rgb *= mix(1., mix(.78, 1.18, fbm(vWp.xz * 3.1)) * mix(.92, 1.08, fbm(vWp.xz * .4)), near);
   vec2 pc = floor(vWp.xz * 5.); float pr = h21(pc);
-  if (pr > .968) diffuseColor.rgb *= mix(1., pr > .992 ? 1.6 : .6, smoothstep(0., .45, 1. - length(fract(vWp.xz * 5.) - .5) * 2.) * near);
+  if (pr > .968) diffuseColor.rgb *= mix(1., pr > .992 ? 1.6 : .6, smoothstep(0., .45, 1. - length(fract(vWp.xz * 5.) - .5) * 2.) * near * (1. - smoothstep(.04, .1, PX)));
   diffuseColor.rgb *= 1. + craters(vWp.xz, 11.) * .22 * (1. - smoothstep(60., 600., camD));
   diffuseColor.rgb *= ${gain.toFixed(2)}; }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -118,7 +121,7 @@ export class LandingSim {
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75))
     r.outputColorSpace = THREE.SRGBColorSpace
     r.toneMapping = THREE.ACESFilmicToneMapping
-    r.toneMappingExposure = 1.75
+    r.toneMappingExposure = 1.35
     r.shadowMap.enabled = true
     r.shadowMap.type = THREE.PCFSoftShadowMap
     container.appendChild(r.domElement)
@@ -164,9 +167,9 @@ export class LandingSim {
         if (o.isMesh) {
           o.receiveShadow = true; o.castShadow = true
           const m = o.material
-          if (m) { m.envMapIntensity = 0; m.metalness = 0; if (m.normalMap) m.normalScale.set(1.1, 1.1) }
-          if (o.name === 'lunar_terrain') regolith(m, { gain: 1 })
-          else if (o.name === 'boulders') { m.flatShading = false; m.color.set(0x8f8b86); m.roughness = 0.95; regolith(m, { bakedLum: false, gain: 1 }); m.needsUpdate = true }
+          if (m) { m.envMapIntensity = 0; m.metalness = 0; if (m.normalMap) m.normalScale.set(0.55, 0.55) }
+          if (o.name === 'lunar_terrain') regolith(m, { gain: 1.3 })
+          else if (o.name === 'boulders') { m.flatShading = false; m.normalMap = null; m.map = null; m.color.set(0x8f8b86); m.roughness = 0.95; regolith(m, { bakedLum: false, gain: 1.25 }); m.needsUpdate = true }
         }
       })
       this.scene.add(this.terrain)
@@ -174,12 +177,7 @@ export class LandingSim {
       this.heroBoulder = this.terrain.getObjectByName('hero_boulder')?.getWorldPosition(new THREE.Vector3()) ?? new THREE.Vector3(11, 1.5, 9)
       // official NASA 3D Resources Apollo LM (decimated, 7 m, feet at y = 0); anchors added here
       this.lander = lan.scene
-      this.lander.traverse((o) => {
-        if (!o.isMesh) return
-        o.castShadow = true; o.receiveShadow = true
-        const ms = Array.isArray(o.material) ? o.material : [o.material]
-        for (const m of ms) if (m?.color) { m.envMapIntensity = 0; const l = m.color.r + m.color.g + m.color.b; if (l > 2.2) m.color.multiplyScalar(0.78); m.roughness = Math.max(m.roughness ?? 0.5, 0.55) }
-      })
+      crispLander(this.lander, this.renderer)
       const anchor = (name, x, y, z, yaw = 0) => { const e = new THREE.Object3D(); e.name = name; e.position.set(x, y, z); e.rotation.y = yaw; this.lander.add(e); return e }
       this.nodes = {
         thruster: this.lander.getObjectByName('thruster_main') ?? anchor('thruster_main', 0, 1.15, 0),
@@ -190,7 +188,7 @@ export class LandingSim {
       // boulders: displace the smooth icospheres into fractured, faceted blocks
       const rocks = this.terrain.getObjectByName('boulders')
       if (rocks?.geometry) {
-        const g = rocks.geometry.index ? rocks.geometry.toNonIndexed() : rocks.geometry
+        const g = mergeVertices(rocks.geometry.clone().deleteAttribute('normal').deleteAttribute('uv'), 1e-3)
         const p = g.attributes.position, v = new THREE.Vector3()
         for (let i = 0; i < p.count; i++) {
           v.fromBufferAttribute(p, i)
@@ -271,7 +269,7 @@ export class LandingSim {
         far = far * (1 - massif * 0.6) + massif * sky
         // under the diorama: hug its relief 0.4 m below; outside: blend from its rim into the far field
         const under = r < 494 ? this._h(x, z) : null
-        const w = THREE.MathUtils.smoothstep(r, 494, 820)
+        const w = THREE.MathUtils.smoothstep(r, 494, 1500)
         const y = under != null ? under - 0.4 : (edge[j] - 0.4) * (1 - w) + (pad + far) * w - (r * r) / (2 * 1737400)
         pos.push(x, y, z)
       }
@@ -282,7 +280,7 @@ export class LandingSim {
     }
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals()
-    const m = regolith(new THREE.MeshStandardMaterial({ color: 0x8a8682, roughness: 1, metalness: 0 }), { bakedLum: false, gain: 1 })
+    const m = regolith(new THREE.MeshStandardMaterial({ color: 0x8a8682, roughness: 1, metalness: 0 }), { bakedLum: false, gain: 1.3 })
     this.horizonRing = new THREE.Mesh(g, m)
     this.horizonRing.receiveShadow = true
     this.scene.add(this.horizonRing)
@@ -292,7 +290,7 @@ export class LandingSim {
   _plume() {
     this.plume = createFirePlume({ length: 9, radius: 1.25, light: false })
     ;(this.nodes.thruster ?? this.lander).add(this.plume)
-    this.engineLight = new THREE.PointLight(0xff9a4a, 0, 60, 1.6)
+    this.engineLight = new THREE.PointLight(0xffc896, 0, 32, 2)
     ;(this.nodes.thruster ?? this.lander).add(this.engineLight)
     this.engineLight.position.set(0, -3, 0)
   }
@@ -485,12 +483,12 @@ export class LandingSim {
       this.nodes.legs.forEach((l, i) => { if (l && this.legRest[i]) l.quaternion.copy(this.legRest[i]).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.max(-0.25, Math.min(0.25, S.comp * 0.12)))) })
       // plume, engine glow, RCS
       this.plume.userData.drive(S.phase === 'BRAKING' || S.phase === 'TERMINAL' ? Math.max(0.05, S.thr) : 0, now, S.h)
-      this.engineLight.intensity = S.phase === 'BRAKING' || S.phase === 'TERMINAL' ? (60 + 140 * S.thr) * (0.9 + 0.1 * Math.random()) : 0
+      this.engineLight.intensity = S.phase === 'BRAKING' || S.phase === 'TERMINAL' ? (25 + 70 * S.thr) * (0.9 + 0.1 * Math.random()) : 0
       this.puffs.forEach((p, i) => { if (p) p.material.opacity = (S.rcs?.[i] ?? 0) > 0 && Math.random() > 0.3 ? 0.55 * S.rcs[i] : 0 })
       // dust below 25 m while firing
       const alt = y - gnd.y
       const firing = S.phase === 'BRAKING' || S.phase === 'TERMINAL'
-      this.skirt.position.set(x, gnd.y + 0.12, z)
+      this.skirt.position.set(x, gnd.y + 0.5, z)
       this.skirt.userData.drive(firing && alt < 30 ? Math.max(0.2, S.thr) * Math.pow(1 - alt / 30, 1.5) * 1.3 : 0, now)
       if (S.thr > 0.05 && alt < 25) this._emitDust(x, z, gnd.y, S.thr * (1 - alt / 25), dt, now)
       this._camera(dt, gnd)

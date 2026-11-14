@@ -94,7 +94,7 @@ export function createFirePlume({ length = 8, radius = 1.1, light = true } = {})
   let lamp = null;
   if (light) {
     // decay 1 keeps the wash readable from 50 m down to contact without blowing out (units: scene km)
-    lamp = new THREE.PointLight(0xff9a4a, 0, 0.09, 1);
+    lamp = new THREE.PointLight(0xffc896, 0, 0.05, 1.4);
     lamp.position.y = -length * 0.45;
     g.add(lamp);
   }
@@ -113,7 +113,7 @@ export function createFirePlume({ length = 8, radius = 1.1, light = true } = {})
     inner.scale.set(1, (0.75 + 0.5 * thr) * near, 1);
     glow.material.opacity = (0.55 + 0.45 * thr) * flick;
     glow.scale.setScalar(radius * (4 + 2.5 * thr) * flick);
-    if (lamp) lamp.intensity = 0.022 * thr * flick * THREE.MathUtils.clamp(1.4 - alt / 90, 0, 1.4);
+    if (lamp) lamp.intensity = 0.0035 * thr * flick * THREE.MathUtils.clamp(1.4 - alt / 60, 0, 1.4);
   };
   g.userData.dispose = () => g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose?.(); });
   return g;
@@ -140,9 +140,12 @@ void main(){
   float r = length(vP) / uR, a = atan(vP.y, vP.x);
   if (r > 1.) discard;
   // soft sheet: broad noise lobes, faint streaking only in the outer part, haze under the nozzle
-  float lobes = n2(vec2(a * 9.0, r * 2.0 - uTime * 1.6)) * 0.6 + n2(vec2(a * 23.0 + 5.0, r * 4.0 - uTime * 2.4)) * 0.4;
-  float streak = n2(vec2(a * 60.0, r * 1.5 - uTime * 3.0));
-  float sheet = smoothstep(0.25, 0.85, lobes) * (1.0 - smoothstep(0.3, 1.0, r)) * (0.75 + 0.25 * mix(1.0, streak, smoothstep(0.5, 0.8, r)));
+  // cartesian noise advected radially outward (angle-based noise draws spokes)
+  // no angle- or time-scaled-direction terms (both draw spokes): drifting cartesian noise + outward pulses
+  vec2 q = vP / uR; float tt = mod(uTime, 60.0);
+  float flow = n2(q * 4.0 + vec2(tt * 0.35, tt * 0.2)) * 0.55 + n2(q * 9.0 - vec2(tt * 0.5, -tt * 0.3) + 7.0) * 0.3 + n2(q * 19.0 + tt * 0.8) * 0.15;
+  float pulse = 0.75 + 0.25 * sin(r * 26.0 - tt * 7.0);
+  float sheet = smoothstep(0.3, 0.85, flow) * pulse * (1.0 - smoothstep(0.2, 1.0, r));
   float core = exp(-r * 6.0);
   float alpha = (core * 0.7 + sheet * 0.55) * uStr;
   gl_FragColor = vec4(vec3(0.86, 0.83, 0.77), clamp(alpha, 0.0, 0.9));
@@ -150,7 +153,7 @@ void main(){
 
 export function createDustSkirt(radius) {
   const m = new THREE.Mesh(
-    new THREE.CircleGeometry(radius, 96).rotateX(-Math.PI / 2),
+    new THREE.RingGeometry(radius * 0.001, radius, 96, 24).rotateX(-Math.PI / 2),
     new THREE.ShaderMaterial({
       vertexShader: SKIRT_VS.replace('vP = position.xy', 'vP = position.xz'),
       fragmentShader: SKIRT_FS,

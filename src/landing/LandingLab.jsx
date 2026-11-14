@@ -111,7 +111,7 @@ export default function LandingLab({ site, time, profile, siteLabel, onClose }) 
       <div className="absolute top-5 inset-x-5 flex flex-wrap items-center gap-3">
         <div className="glass !rounded-full px-4 py-2 text-[13px] text-[var(--lux-hi)]">{t('lab.title')} · {siteLabel}</div>
         <div className="flex gap-2 flex-wrap">
-          {PH.map((p, i) => <span key={p} className={`chip !text-[12px] ${i === cur ? '!text-[var(--lux-hi)] !border-white/30 bg-white/10' : i < cur ? 'text-go' : 'lux-muted'}`}>{i < cur ? '✓' : `0${i + 1}`} · {t(`lab.${p}`)}</span>)}
+          {PH.map((p, i) => <span key={p} className={`chip !text-[12px] !bg-black/55 backdrop-blur-md ${i === cur ? '!text-[var(--lux-hi)] !border-white/30 bg-white/10' : i < cur ? 'text-go' : 'lux-muted'}`}>{i < cur ? '✓' : `0${i + 1}`} · {t(`lab.${p}`)}</span>)}
         </div>
         <div className="ml-auto flex gap-2">
           <button className="capsule" onClick={restart}>↻ {t('lab.again')}</button>
@@ -121,7 +121,7 @@ export default function LandingLab({ site, time, profile, siteLabel, onClose }) 
 
       {tel && (
         <div className="absolute left-5 right-5 bottom-5 flex flex-wrap items-end gap-3">
-          <div className="glass p-4 grid grid-cols-5 gap-5 min-w-[min(100%,640px)]">
+          <div className="glass !bg-black/60 backdrop-blur-xl p-4 grid grid-cols-5 gap-5 min-w-[min(100%,640px)]">
             {cells.map(([l, v, u]) => (
               <div key={l}>
                 <div className="text-[11px] lux-muted uppercase tracking-[.08em]">{l}</div>
@@ -129,7 +129,7 @@ export default function LandingLab({ site, time, profile, siteLabel, onClose }) 
               </div>
             ))}
           </div>
-          <div className="glass px-4 py-3 text-[12px] lux-muted">
+          <div className="glass !bg-black/60 backdrop-blur-xl px-4 py-3 text-[12px] text-white/75">
             <div>{t('lab.thrust')} <span className="text-[var(--lux-hi)] tabular-nums">{Math.round(tel.thr * 100)}%</span> · {t('lab.pitch')} <span className="text-[var(--lux-hi)] tabular-nums">{tel.pitch.toFixed(1)}°</span> · g = 1.62 m/s²</div>
             <div className="mt-1">{tel.source}</div>
             {note && <div className="mt-1 text-warn">☀ {t('lab.moved', { d: note })}</div>}

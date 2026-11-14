@@ -225,7 +225,8 @@ export default function MoonSection() {
         <div className="absolute inset-0 z-30 pointer-events-none">
           <div className="absolute top-[11vh] inset-x-0 flex justify-center gap-2 px-4">
             {PHASES.map((p, i) => {
-              const cur = PHASES.indexOf(landing.phase)
+              // P66 (vertical descent) is shown from ~150 m, like Apollo's switch from P64 to manual/P66
+              const cur = landing.phase === 'APPROACH' && landing.alt < 150 ? 1 : PHASES.indexOf(landing.phase)
               return <span key={p} className={`chip !text-[12px] ${i === cur ? '!text-[var(--lux-hi)] !border-white/30 bg-white/10' : i < cur ? 'text-go' : 'lux-muted'}`}>{i < cur ? '✓' : `0${i + 1}`} · {t(`land.${p}`)}</span>
             })}
           </div>

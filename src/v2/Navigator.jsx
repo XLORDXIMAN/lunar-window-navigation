@@ -50,9 +50,9 @@ function SiteList() {
           return (
             <li key={s.id} className={`group grid grid-cols-[24px_1fr_auto_auto] items-center gap-3 py-3 border-b border-ice/10 cursor-pointer transition-colors ${on ? 'text-ice' : 'text-ice/70 hover:text-ice'}`} onClick={() => select(s.id)}>
               <span className={`mono-sm ${on ? 'text-cobalt-lt' : 'text-fog'}`}>{String(i + 1).padStart(2, '0')}</span>
-              <span className={`text-[15px] truncate ${on ? 'translate-x-1' : ''} transition-transform`}>{nm(s)}</span>
+              <span className={`text-[15px] truncate ${on ? 'text-white font-medium' : ''}`}>{nm(s)}</span>
               <span className={`w-1.5 h-1.5 rounded-full ${VDOT[v.level]}`} title={t(`v.${v.level}`)} />
-              <input type="checkbox" aria-label={t('addBars')} checked={compareIds.includes(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggleCompare(s.id)} />
+              <input type="checkbox" className="lux-check" aria-label={t('addBars')} checked={compareIds.includes(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggleCompare(s.id)} />
             </li>
           )
         })}
@@ -121,7 +121,7 @@ function Readout() {
           <div>
             <dt className="mono-sm text-fog mb-1">{t('best')}</dt>
             <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-[15px] text-go sm:whitespace-nowrap">{f.day(best.start)} → {f.day(best.end)}</span>
+              <span className="text-[15px] text-go">{f.day(best.start)} → {f.day(best.end)}</span>
               <button className="mono-sm text-ice hover:text-signal" onClick={() => setTime(best.start)}>{t('jump')}</button>
             </dd>
           </div>
@@ -234,10 +234,13 @@ function Priorities() {
       <div>
         <div className="mono-sm text-fog mb-5">{t('priorities')}</div>
         {['power', 'comm', 'duration', 'safety'].map((k) => (
-          <label key={k} className="grid grid-cols-[150px_1fr_20px] items-center gap-4 py-2.5 border-b border-ice/10">
+          <label key={k} className="grid grid-cols-[150px_1fr_36px] items-center gap-4 py-3.5 border-b border-ice/10">
             <span className="text-[14px] text-ice/80">{t(`w.${k}`).replace(/^\S+\s/, '')}</span>
-            <input type="range" min="0" max="5" value={weights[k]} onChange={(e) => setWeight(k, +e.target.value)} />
-            <span className="num text-[13px] text-cobalt-lt text-right">{weights[k]}</span>
+            <span className="lux-range-wrap">
+              <input type="range" className="lux-range" min="0" max="5" value={weights[k]} style={{ '--v': `${weights[k] * 20}%` }} onChange={(e) => setWeight(k, +e.target.value)} />
+              <span className="lux-range-ticks" aria-hidden="true">{[0, 1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= weights[k] ? 'on' : ''} />)}</span>
+            </span>
+            <span className="lux-range-val num">{weights[k]}</span>
           </label>
         ))}
         {kids && <p className="kids mt-4">{t('kids.priorities')}</p>}
