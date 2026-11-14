@@ -161,7 +161,7 @@ export default function DotMoon() {
   }, [])
 
   return (
-    <div ref={wrap} className="frame bg-black relative h-[clamp(380px,48vw,560px)] overflow-hidden">
+    <div ref={wrap} className="frame relative h-[clamp(380px,48vw,560px)] overflow-hidden">
       <canvas ref={ref} className="absolute inset-0 w-full h-full cursor-grab touch-none" aria-label={t('moon.title')} />
       <div className="absolute top-4 left-4 flex gap-5">
         {Object.keys(VIEWS).map((v) => <button key={v} className={`navlink !text-[10px] ${view === v ? 'on' : ''}`} onClick={() => setView(v)}>{t(`view.${v}`)}</button>)}

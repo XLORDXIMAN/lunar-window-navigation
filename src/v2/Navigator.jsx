@@ -293,7 +293,7 @@ export default function Navigator() {
   const t = useT(), f = useFmt()
   const { time, setTime, kids, setKids, mockData } = useStore()
   return (
-    <section id="navigator" className="bg-black py-[var(--section-gap)] scroll-mt-2">
+    <section id="navigator" className="py-[var(--section-gap)] scroll-mt-2">
       <div className="wrap">
         <Reveal>
           <SectionHead n="02" kicker={t('nav.nav')} title={t('nav2.title')} right={

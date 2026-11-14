@@ -92,8 +92,7 @@ export default function Hero() {
 
   return (
     <section id="top" className="relative min-h-[100svh] flex flex-col overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-[58%] opacity-90"><ParticleTerrain onSun={onSun} /></div>
-      <div className="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-void to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[58%] opacity-90 [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"><ParticleTerrain onSun={onSun} /></div>
       <div className="relative z-10"><Nav /></div>
 
       <div className="relative z-10 wrap flex-1 grid lg:grid-cols-[1.25fr_1fr] gap-10 items-start pt-[clamp(24px,5vh,72px)]">

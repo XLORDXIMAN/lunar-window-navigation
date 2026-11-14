@@ -3,6 +3,7 @@ import { useStore, loadSites } from './store.js'
 import { useT } from './lib/i18n.js'
 import { HOUR } from './lib/ephem.js'
 import Intro from './v2/Intro.jsx'
+import StarSky from './v2/StarSky.jsx'
 import Hero from './v2/Hero.jsx'
 import Columns from './v2/Columns.jsx'
 import Navigator from './v2/Navigator.jsx'
@@ -37,6 +38,7 @@ export default function App() {
 
   return (
     <>
+      <StarSky />
       {boot && <Intro onDone={done} />}
       {!ready ? <div className="min-h-screen grid place-items-center mono text-fog">{t('loading')}</div> : (
         <main>
