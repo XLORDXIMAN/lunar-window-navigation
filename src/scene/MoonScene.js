@@ -885,20 +885,22 @@ export class MoonScene {
     const inPolar = !!this.polarView && this.polar.containsLatLon(site.lat, site.lon);
 
     if (!inPolar) {
-      // деградация: обычный пролёт и вид с поверхности на гладкой сфере
+      // Integration: a real powered descent everywhere — same DescentSim (P64 → P66 → contact, g = 1.62)
+      // over the smooth sphere (curvature drop), textured LROC ground, chase camera, plume, legs, dust.
       if (this.mode !== 'globe') await this.setView('globe');
-      this.flyTo(site.id ?? site, { duration: 1800, distance: 1.15 });
-      this.hud.setCaption(`Approach · ${site.name ?? 'site'} (detailed terrain only near the South Pole)`);
-      await wait(1900);
+      this.flyTo(site.id ?? site, { duration: 1500, distance: 1.15 });
+      await wait(1550);
+      await this._sphereDescent(site, lander);
       await this.enterSurfaceView(site, { standoffM: lander ? 28 : 0 });
       if (lander && this.surface) {
         this.surface.lander = lander;
         this._placeSurfaceModels();
         this._updateSurfaceSky();
       }
-      this.hud.setCaption(`Touchdown · ${site.name ?? 'site'}`);
-      setTimeout(() => this.hud.setCaption(null), 3000);
-      this._emit('landingend', { id: site.id ?? null });
+      const v = this._lastDescent?.touchdownSpeed;
+      this.hud.setCaption(`Touchdown · ${site.name ?? 'site'}${v != null ? ` · ${v.toFixed(1)} m/s` : ''}`);
+      setTimeout(() => this.hud.setCaption(null), 3500);
+      this._emit('landingend', { id: site.id ?? null, touchdownSpeed: v, durationSec: this._lastDescent?.t });
       return;
     }
 
@@ -1053,6 +1055,104 @@ export class MoonScene {
       const amp = km(0.25) * s.throttle * (1 - s.alt / 120)
       pv.camera.position.addScaledVector(L.sideL, (Math.random() - 0.5) * amp).addScaledVector(L.upL, (Math.random() - 0.5) * amp)
     }
+    if (L.landedAt != null && now - L.landedAt > 2200) L.resolve();
+  }
+
+  /** Powered descent over the smooth sphere for sites outside the polar terrain tile (integration). */
+  async _sphereDescent(site, lander) {
+    const v = this.sphereView;
+    await this.hud.fadeThrough(() => {
+      this._leaveSurface();
+      this.mode = 'descent';
+      this.controls.enabled = false;
+      if (this.polarView) this.polarView.controls.enabled = false;
+      v.setSite(site.lat, site.lon);
+      v.sky.flareEnabled = true;
+      v.models.clear();
+      v.dust.clear();
+      this.hud.setBadge(`Descent · ${site.name ?? 'site'} · LROC albedo + procedural regolith · g = 1.62 m/s²`);
+    });
+    // approach with the Sun to the side so the lander and its shadow are both in frame
+    const sunDir = latLonToVector(this.sub.sunLat, this.sub.sunLon);
+    const sunAz = azEl(v.frame, sunDir).az * D2R, head = sunAz + Math.PI / 2;
+    const dir = [Math.sin(head), Math.cos(head)];
+    const groundZ = (x, y) => -(x * x + y * y) / (2 * R_KM * 1000);
+    const L = { sim: new DescentSim({ approachDir: dir }), groundZ, lander, quat: new THREE.Quaternion(), dir, landedAt: null, camTarget: null, camInit: false };
+    if (lander) {
+      lander.position.set(0, 0, 0);
+      lander.scale.setScalar(0.001);
+      v.models.add(lander);
+      this._attachPlume(lander);
+      lander.userData.fx = new LanderFx(lander, { unit: 0.001 });
+      lander.userData.legs = [];
+      lander.traverse((o) => o.name.startsWith('LegHinge_') && lander.userData.legs.push({ o, q: o.quaternion.clone() }));
+    }
+    this.sphereLanding = L;
+    await new Promise((resolve) => (L.resolve = resolve));
+    this._lastDescent = { touchdownSpeed: L.sim.touchdownSpeed, t: L.sim.t };
+    this.sphereLanding = null;
+    this._detachPlume();
+    v.models.clear();
+    v.dust.clear();
+    v.camera.fov = 60;
+  }
+
+  _frameDescent(now) {
+    const L = this.sphereLanding, v = this.sphereView;
+    if (!L) return;
+    const dt = this._dt ?? 1 / 60;
+    const scale = L.sim.phase === 'APPROACH' ? 4 : L.sim.phase === 'VERTICAL' ? 2 : 1;
+    let s = L.sim.state(L.groundZ);
+    const steps = Math.ceil((dt * scale) / (1 / 120));
+    for (let i = 0; i < steps && s.phase !== 'LANDED'; i++) s = L.sim.step((dt * scale) / steps, L.groundZ);
+    if (s.phase === 'LANDED' && L.landedAt == null) L.landedAt = now;
+    this._emit('landingtelemetry', { phase: s.phase, alt: s.alt, vs: s.vs, hs: s.hs, throttle: s.throttle, scale, t: L.sim.t });
+
+    // sim (m: x east, y north, z up) → local view (km: X east, Y up, Z south)
+    const toL = (x, y, z, out = new THREE.Vector3()) => out.set(x / 1000, z / 1000, -y / 1000);
+    const pos = toL(s.pos[0], s.pos[1], s.pos[2]);
+    const up = new THREE.Vector3(0, 1, 0);
+    const approach = new THREE.Vector3(L.dir[0], 0, -L.dir[1]).normalize();
+    const side = new THREE.Vector3().crossVectors(approach, up).normalize();
+    const firing = s.phase === 'APPROACH' || s.phase === 'VERTICAL';
+    if (L.lander) {
+      const T = s.thrust;
+      const axis = firing ? toL(T[0], T[1], T[2]).normalize() : up;
+      const target = new THREE.Quaternion().setFromUnitVectors(up, axis);
+      const before = L.quat.clone();
+      L.quat.slerp(target, 1 - Math.exp(-dt * scale * 2.5));
+      L.lander.position.copy(pos);
+      L.lander.quaternion.copy(L.quat);
+      const turning = before.angleTo(L.quat) / Math.max(dt, 1e-3);
+      L.lander.userData.fx?.update(now / 1000, dt, { rcsRate: turning > 0.05 ? 8 : 0 });
+      const unfold = 1 - THREE.MathUtils.smoothstep(s.alt, 300, 600);
+      for (const { o, q } of L.lander.userData.legs ?? []) o.quaternion.copy(q).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), (1 - unfold) * -1.1));
+      if (this._plume) {
+        this._plume.material.opacity = firing ? (0.25 + 0.55 * s.throttle) * (0.9 + 0.1 * Math.sin(now * 0.05)) : 0;
+        this._plume.scale.y = 0.6 + 0.9 * s.throttle;
+      }
+    }
+    if (firing && s.alt < 25) v.dust.emit(L.groundZ(s.pos[0], s.pos[1]) / 1000, s.throttle * (1 - s.alt / 25), dt * scale);
+    v.dust.update(dt * scale);
+
+    // chase camera: behind-and-beside, tightening as the ground approaches
+    const km = (m) => m / 1000;
+    const dist = km(THREE.MathUtils.clamp(30 + s.alt * 0.085, 30, 140));
+    const h = km(THREE.MathUtils.clamp(3 + s.alt * 0.035, 3, 50));
+    const sd = km(THREE.MathUtils.clamp(12 + s.alt * 0.04, 12, 60));
+    const goal = pos.clone().addScaledVector(approach, -dist).addScaledVector(side, sd).addScaledVector(up, h);
+    const cam = v.camera;
+    if (!L.camInit) { L.camInit = true; cam.position.copy(goal); cam.fov = 32; cam.near = 0.0005; cam.far = 30000; }
+    cam.position.lerp(goal, 1 - Math.exp(-dt * 2.2));
+    const gY = -(cam.position.x ** 2 + cam.position.z ** 2) / (2 * R_KM) + km(1.5);
+    if (cam.position.y < gY) cam.position.y = gY;
+    if (firing && s.alt < 120) { const amp = km(0.25) * s.throttle * (1 - s.alt / 120); cam.position.addScaledVector(side, (Math.random() - 0.5) * amp).addScaledVector(up, (Math.random() - 0.5) * amp); }
+    const look = pos.clone().addScaledVector(up, km(3));
+    L.camTarget = L.camTarget ? L.camTarget.lerp(look, 1 - Math.exp(-dt * 6)) : look;
+    cam.up.copy(up);
+    cam.lookAt(L.camTarget);
+    cam.updateProjectionMatrix();
+    this._render(v.scene, cam, () => { const { sunL } = v.applyState(this.sub, this.date); if (L.lander) aimPanels(L.lander, sunL) });
     if (L.landedAt != null && now - L.landedAt > 2200) L.resolve();
   }
 
@@ -1243,6 +1343,7 @@ export class MoonScene {
 
     if (this.mode === 'globe') this._frameGlobe();
     else if (this.mode === 'polar') this._framePolar(now);
+    else if (this.mode === 'descent') this._frameDescent(now);
     else this._frameSurface();
   }
 

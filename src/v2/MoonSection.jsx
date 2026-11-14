@@ -111,7 +111,25 @@ export default function MoonSection() {
       else await m.setView('globe') // setView leaves the surface view itself (no racing exit)
     } finally { setBusy(false) }
   }
-  const land = () => { setActive(true); setResult(null); moon.current?.flyTo(selectedId, { landing: true }) }
+  const [toast, setToast] = useState(null)
+  // landing at night shows nothing but earthshine: move the landing to the next local morning (like Apollo 11, Sun ≈ 10°)
+  const land = () => {
+    setActive(true); setResult(null)
+    const s = useStore.getState(), sv = s.sites.find((x) => x.id === s.selectedId)
+    let when = s.time
+    if (sv && stateAt(sv, when).sunVis < 0.5) {
+      const tt = timeToChange(sv, when, 'sun')
+      if (!tt.on && tt.hours != null) {
+        when = when + (tt.hours + (Math.abs(sv.lat) > 60 ? 6 : 18)) * HOUR
+        s.setTime(when)
+        const el = stateAt(sv, when).sun.el
+        setToast(t('land.dawn', { d: f.dt(when), el: `${el >= 0 ? '+' : ''}${el.toFixed(1)}°` }))
+        setTimeout(() => setToast(null), 6500)
+      }
+    }
+    moon.current?.setDate(new Date(when))
+    moon.current?.flyTo(s.selectedId, { landing: true })
+  }
   const timelapse = () => { const m = moon.current; if (!m) return; if (lapse.current) { m.stopTimelapse(); return } m.setDate(new Date(time)); m.playTimelapse({ spanDays: 29.53, durationSec: 20 }) }
   const toggleFull = () => { if (document.fullscreenElement) document.exitFullscreen(); else sec.current?.requestFullscreen?.() }
 
@@ -189,6 +207,8 @@ export default function MoonSection() {
           <button className="capsule capsule-primary" onClick={land}>🚀 {t('m3.land')}</button>
         </div>
       </div>
+
+      {toast && <div className="absolute z-40 top-[15vh] left-1/2 -translate-x-1/2 w-[min(92vw,560px)]"><div className="glass px-5 py-3 text-center text-[14px] text-[var(--lux-hi)]">☀ {toast}</div></div>}
 
       {/* landing HUD */}
       {cine && (
