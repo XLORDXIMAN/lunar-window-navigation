@@ -9,13 +9,13 @@ const FLAG = 'M6 1.5 C11 -0.5 15 4 21 2.6 C25 1.7 29 0.6 33 0 L30.5 14.5 C27 15.
 const STAR = 'M18.4 5 L19.4 8.3 L22.7 9.3 L19.4 10.3 L18.4 13.6 L17.4 10.3 L14.1 9.3 L17.4 8.3 Z'
 const ease3 = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3)
 
-export default function Intro({ onDone }) {
+export default function Intro({ onReveal, onDone }) {
   const t = useT()
   const ref = useRef(null)
   const [tag, setTag] = useState(false)
   const [out, setOut] = useState(false)
   const done = useRef(false)
-  const finish = () => { if (!done.current) { done.current = true; onDone() } }
+  const finish = () => { if (!done.current) { done.current = true; onReveal?.(); onDone() } }
 
   useEffect(() => {
     const c = ref.current, ctx = c.getContext('2d')
@@ -75,7 +75,7 @@ export default function Intro({ onDone }) {
     function frame(now) {
       const s = reduce ? 2.2 : (now - t0) / 1000
       if (s > 1.7 && !tagShown) { tagShown = true; setTag(true) }
-      if (s > TOTAL - 0.45 && !outShown) { outShown = true; setOut(true) }
+      if (s > TOTAL - 0.45 && !outShown) { outShown = true; setOut(true); onReveal?.() }
       if (s >= TOTAL) { finish(); return }
       ctx.clearRect(0, 0, w, h)
       const sweep = ((s - 1.6) / 1.4) * 1.6 - 0.3 // light band position 0..1 across the mark

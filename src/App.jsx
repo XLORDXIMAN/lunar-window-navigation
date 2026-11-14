@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useStore, loadSites } from './store.js'
 import { useT } from './lib/i18n.js'
 import { HOUR } from './lib/ephem.js'
-import Intro from './v2/Intro.jsx'
+import Intro from './components/VideoIntro.jsx'
 import StarSky from './v2/StarSky.jsx'
 import Hero from './v2/Hero.jsx'
 import Columns from './v2/Columns.jsx'
@@ -13,8 +13,10 @@ export default function App() {
   const t = useT()
   const ready = useStore((s) => s.sites.length > 0)
   const playing = useStore((s) => s.playing)
-  const [boot, setBoot] = useState(true)
-  const done = useCallback(() => setBoot(false), [])
+  const [boot, setBoot] = useState(true)   // intro on stage
+  const [site, setSite] = useState(false)  // site mounted (during the intro's exit transition)
+  const reveal = useCallback(() => setSite(true), [])
+  const done = useCallback(() => { setSite(true); setBoot(false) }, [])
 
   useEffect(() => { loadSites().then(({ sites, mock }) => useStore.getState().setSites(sites, mock)) }, [])
 
@@ -39,8 +41,8 @@ export default function App() {
   return (
     <>
       <StarSky />
-      {boot && <Intro onDone={done} />}
-      {!ready ? <div className="min-h-screen grid place-items-center mono text-fog">{t('loading')}</div> : (
+      {boot && <Intro onReveal={reveal} onDone={done} />}
+      {!site ? null : !ready ? <div className="min-h-screen grid place-items-center mono text-fog">{t('loading')}</div> : (
         <main>
           <Hero />
           <Columns />
