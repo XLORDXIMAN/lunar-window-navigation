@@ -5,6 +5,7 @@ from datetime import datetime
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from .astrodynamics import KERNEL_URLS, TARGET_FRAME, compute_geometry, get_ephemeris
 from .schemas import BatchIn, BatchOut, GeometryOut
@@ -32,6 +33,8 @@ async def lifespan(app_: FastAPI):
 
 
 app = FastAPI(title="Lunar Landing Site Navigator API", version="0.1.0", lifespan=lifespan)
+# the static frontend (Vite dev / Vercel) calls this API from another origin
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
 
 
 @app.get("/health")

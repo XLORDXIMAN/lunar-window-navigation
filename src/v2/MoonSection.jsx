@@ -2,12 +2,13 @@
 // Synced both ways with the app (sites, selection, time, A/B slip, time-lapse). Interaction is gated:
 // the page keeps scrolling until the visitor clicks "Control the Moon" (or goes full screen).
 // Landing gets a cinematic HUD (letterbox, altitude/speeds/throttle, P64 → P66 → contact, result card).
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore, useSite } from '../store.js'
 import { useT, useFmt } from '../lib/i18n.js'
 import { siteName } from '../lib/ui.jsx'
 import { stateAt, timeToChange, windowMetrics, verdict, DAY, HOUR } from '../lib/ephem.js'
 import { MoonScene } from '../scene/MoonScene.js'
+const LandingLab = lazy(() => import('../landing/LandingLab.jsx'))
 
 const CAT = { intl: 'international' }
 const VTXT = { green: 'text-go', yellow: 'text-warn', red: 'text-nogo' }
@@ -112,6 +113,14 @@ export default function MoonSection() {
     } finally { setBusy(false) }
   }
   const [toast, setToast] = useState(null)
+  const [lab, setLab] = useState(null) // { site, time, profile }
+  const openLab = () => {
+    const s = useStore.getState(), sv = s.sites.find((x) => x.id === s.selectedId); if (!sv) return
+    let profile = null; try { profile = moon.current?.getHorizonProfile(sv.id) } catch { /* smooth sphere */ }
+    moon.current?.pause?.()
+    setLab({ site: sv, time: s.time, profile })
+  }
+  const closeLab = () => { setLab(null); moon.current?.resume?.() }
   // landing at night shows nothing but earthshine: move the landing to the next local morning (like Apollo 11, Sun ≈ 10°)
   const land = () => {
     setActive(true); setResult(null)
@@ -205,6 +214,7 @@ export default function MoonSection() {
           <button className={`capsule ${compare ? 'capsule-primary' : ''}`} onClick={() => setCompare(!compare)}>{compare ? t('m3.abOff') : t('m3.ab')}</button>
           <button className="capsule" onClick={timelapse}>{t('m3.lapse')}</button>
           <button className="capsule capsule-primary" onClick={land}>🚀 {t('m3.land')}</button>
+          <button className="capsule capsule-primary" onClick={openLab}>🎬 {t('lab.open')}</button>
         </div>
       </div>
 
@@ -250,6 +260,7 @@ export default function MoonSection() {
           </div>
         </div></div>
       )}
+      {lab && <Suspense fallback={null}><LandingLab site={lab.site} time={lab.time} profile={lab.profile} siteLabel={siteName(lab.site, lang)} onClose={closeLab} /></Suspense>}
     </section>
   )
 }
