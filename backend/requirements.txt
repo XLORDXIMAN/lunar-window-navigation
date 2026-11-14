@@ -1,0 +1,6 @@
+fastapi==0.162.7
+jplephem==2.24
+numpy==2.5.4
+pydantic==2.14.3
+skyfield==1.55
+uvicorn==0.54.0
