@@ -69,6 +69,24 @@ function realPos(site, t, elKey, azKey) {
   return { el, az: ((a0 + (a1 - a0) * f) % 360 + 360) % 360 }
 }
 
+// Sub-solar / sub-Earth point from the REAL data: take the local az/el at a near-equatorial
+// reference site and rotate the direction back into the Moon-fixed frame (parallax of the
+// Sun is negligible; Earth's is ~0.26°, fine for a globe view).
+const REF = { id: 'apollo-11', lat: 0.67416, lon: 23.47314 }
+function subPointReal(t, elKey, azKey) {
+  const p = REAL && realPos(REF, t, elKey, azKey)
+  if (!p) return null
+  const la = REF.lat * DEG, lo = REF.lon * DEG, el = p.el * DEG, az = p.az * DEG
+  const up = [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)]
+  const east = [-Math.sin(lo), Math.cos(lo), 0]
+  const north = [-Math.sin(la) * Math.cos(lo), -Math.sin(la) * Math.sin(lo), Math.cos(la)]
+  const ce = Math.cos(el), a = ce * Math.sin(az), b = ce * Math.cos(az), c = Math.sin(el)
+  const v = [0, 1, 2].map((k) => a * east[k] + b * north[k] + c * up[k])
+  return { lat: Math.asin(Math.max(-1, Math.min(1, v[2]))) / DEG, lon: Math.atan2(v[1], v[0]) / DEG }
+}
+export const subSolarAt = (t) => subPointReal(t, 'sun_el', 'sun_az') ?? subSolar(t)
+export const subEarthAt = (t) => subPointReal(t, 'earth_el', 'earth_az') ?? subEarth(t)
+
 export const sunPos = (site, t) => realPos(site, t, 'sun_el', 'sun_az') ?? (() => { const s = subSolar(t); return altaz(site.lat, s.lat, site.lon - s.lon) })()
 export const earthPos = (site, t) => realPos(site, t, 'earth_el', 'earth_az') ?? (() => { const e = subEarth(t); return altaz(site.lat, e.lat, site.lon - e.lon) })()
 

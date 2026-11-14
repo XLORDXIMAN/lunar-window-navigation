@@ -109,15 +109,26 @@ export function Scenario() {
           <Col e={A} label={t('scenA')} />
           <Col e={B} label={t('scenB')} editable />
         </div>
-        <div className="border-t border-ice/20">
+        <div className="grid lg:grid-cols-2 gap-x-16 border-t border-ice/20">
           {ROWS.map(([k, g, fmt, dir]) => {
-            const d = g(B) - g(A), good = d * dir > 1e-6, bad = d * dir < -1e-6
+            const va = g(A), vb = g(B), d = vb - va, good = d * dir > 1e-6, bad = d * dir < -1e-6
+            const span = k === 'row.sunEl' ? [Math.min(va, vb, -5), Math.max(va, vb, 5)] : [0, Math.max(Math.abs(va), Math.abs(vb), 1e-6) * 1.08]
+            const pct = (v) => `${Math.max(1.5, ((v - span[0]) / (span[1] - span[0])) * 100)}%`
             return (
-              <div key={k} className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-4 py-4 border-b border-ice/10 items-baseline">
-                <span className="text-[15px] text-ice/80">{t(k)}</span>
-                <span className="num text-[15px]">{fmt(g(A))}</span>
-                <span className="num text-[15px]">{fmt(g(B))}</span>
-                <span className={`num text-[15px] text-right ${good ? 'text-go' : bad ? 'text-nogo' : 'text-fog'}`}>{good ? '▲' : bad ? '▼' : '='} {fmt(Math.abs(d))}</span>
+              <div key={k} className="py-5 border-b border-ice/10">
+                <div className="flex items-baseline justify-between gap-4 mb-3">
+                  <span className="text-[15px] text-ice/85">{t(k)}</span>
+                  <span className={`num text-[13px] px-2 py-0.5 rounded-[var(--radius-tag)] border ${good ? 'text-go border-go/40' : bad ? 'text-nogo border-nogo/40' : 'text-fog border-ice/15'}`}>{good ? '▲' : bad ? '▼' : '='} {fmt(Math.abs(d))}</span>
+                </div>
+                {[['A', va, 'bg-ice/70'], ['B', vb, bad ? 'bg-nogo' : good ? 'bg-go' : 'bg-ice/70']].map(([lab, v, col]) => (
+                  <div key={lab} className="grid grid-cols-[18px_1fr_110px] items-center gap-3 mt-1.5">
+                    <span className="mono-sm text-fog">{lab}</span>
+                    <div className="h-[6px] bg-ice/[.06] relative overflow-hidden">
+                      <div className={`absolute inset-y-0 left-0 bar-fill ${col}`} style={{ width: pct(v) }} />
+                    </div>
+                    <span className="num text-[13px] text-right text-ice/90">{fmt(v)}</span>
+                  </div>
+                ))}
               </div>
             )
           })}

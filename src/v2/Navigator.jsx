@@ -4,11 +4,12 @@
 import { useMemo, useState } from 'react'
 import { useStore, useSite } from '../store.js'
 import { CATEGORIES } from '../data/sites.js'
-import { stateAt, timeToChange, windowMetrics, verdict, bestWindow, score, DAY, HOUR, SYNODIC_H } from '../lib/ephem.js'
+import { stateAt, timeToChange, windowMetrics, verdict, bestWindow, score, earthPos, DAY, HOUR, SYNODIC_H } from '../lib/ephem.js'
 import { useT, useFmt } from '../lib/i18n.js'
 import { AnimNum, useSiteName, Reveal } from '../lib/ui.jsx'
 import HorizonPlot from './HorizonPlot.jsx'
-import MoonScene from '../components/MoonScene.jsx'
+import DotMoon from './DotMoon.jsx'
+import SkyDial from './SkyDial.jsx'
 
 const VCOL = { green: 'text-go border-go/60', yellow: 'text-warn border-warn/60', red: 'text-nogo border-nogo/60' }
 const VDOT = { green: 'bg-go', yellow: 'bg-warn', red: 'bg-nogo' }
@@ -141,11 +142,30 @@ function Readout() {
   )
 }
 
+// 14-day elevation trace: lit/visible segments in colour, the rest dim; dashed line = 0°
+function Spark({ values, on, color }) {
+  const n = values.length, lo = Math.min(-2, ...values), hi = Math.max(2, ...values)
+  const W = 200, H = 40, x = (i) => (i / (n - 1)) * W, y = (v) => H - ((v - lo) / (hi - lo)) * H
+  let d = '', dOn = ''
+  values.forEach((v, i) => { const c = `${x(i).toFixed(1)},${y(v).toFixed(1)}`; d += (i ? 'L' : 'M') + c; dOn += (on[i] ? (i && on[i - 1] ? 'L' : 'M') : '') + (on[i] ? c : '') })
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-10 mt-3 block">
+      <line x1="0" x2={W} y1={y(0)} y2={y(0)} stroke="#d8eaff" strokeOpacity=".2" strokeDasharray="2 4" vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="#d8eaff" strokeOpacity=".22" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      <path d={dOn} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
 function Metrics() {
   const t = useT(), f = useFmt()
   const site = useSite(); const time = useStore((s) => s.time)
   if (!site) return null
-  const m = windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1)
+  const t0 = Math.floor(time / HOUR) * HOUR
+  const m = windowMetrics(site, t0, 14, 1)
+  const earthEl = Array.from({ length: m.link.length }, (_, i) => earthPos(site, t0 + i * HOUR).el)
+  const sparks = [<Spark key="s" values={Array.from(m.sunEl)} on={Array.from(m.sun, (v) => v >= 0.5)} color="#ff4105" />,
+    <Spark key="e" values={earthEl} on={Array.from(m.link, (v) => v === 1)} color="#5b8cff" />]
   const cells = [
     [t('sunlight'), <><AnimNum value={m.sunPct} />%</>, 'text-signal', m.sunPct],
     [t('dte'), <><AnimNum value={m.linkPct} />%</>, 'text-cobalt-lt', m.linkPct],
@@ -162,7 +182,7 @@ function Metrics() {
             <div className="mono-sm text-fog leading-[1.5]">{label}</div>
             <div>
               <div className={`font-display text-[32px] leading-none tracking-[-0.02em] ${col}`}>{val}</div>
-              {pct != null && <div className="h-px bg-ice/15 mt-3"><div className={`h-px bar-fill ${i === 0 ? 'bg-signal' : 'bg-cobalt-lt'}`} style={{ width: `${pct}%` }} /></div>}
+              {pct != null && sparks[i]}
             </div>
           </div>
         ))}
@@ -262,7 +282,10 @@ export default function Navigator() {
           <Reveal><SiteList /></Reveal>
           <div className="flex flex-col gap-10 min-w-0">
             <Readout />
-            <HorizonPlot />
+            <div className="grid 2xl:grid-cols-[1.6fr_1fr] gap-6 items-start">
+              <HorizonPlot />
+              <SkyDial />
+            </div>
             {kids && <p className="kids -mt-6">{t('kids.horizon')}</p>}
           </div>
         </div>
@@ -277,7 +300,7 @@ export default function Navigator() {
             <p className="text-[15px] leading-[1.6] text-fog">{t('moon.text')}</p>
             <p className="mono-sm text-fog mt-6">{f.dt(time)}</p>
           </div>
-          <div className="moon-slot"><MoonScene /></div>
+          <div className="moon-slot"><DotMoon /></div>
         </div>
 
         <div className="mt-[var(--section-gap)]"><Priorities /></div>
