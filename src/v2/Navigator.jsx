@@ -14,14 +14,13 @@ import SkyDial from './SkyDial.jsx'
 const VCOL = { green: 'text-go border-go/60', yellow: 'text-warn border-warn/60', red: 'text-nogo border-nogo/60' }
 const VDOT = { green: 'bg-go', yellow: 'bg-warn', red: 'bg-nogo' }
 
-export function SectionHead({ n, kicker, title, right }) {
+export function SectionHead({ kicker, title, sub, right }) {
   return (
-    <div className="flex flex-wrap items-end gap-6 mb-10">
-      <div className="flex-1 min-w-[280px]">
-        <div className="mono text-fog mb-5">{n} · {kicker}</div>
-        <h2 className="h-section">{title.split('*').map((p, i) => i % 2 ? <span key={i} className="accent">{p}</span> : p)}</h2>
-      </div>
-      {right}
+    <div className="flex flex-col items-center text-center gap-4 mb-14">
+      <div className="eyebrow">{kicker}</div>
+      <h2 className="h-section max-w-[900px] [text-wrap:balance]">{title.split('*').map((p, i) => <span key={i}>{p}</span>)}</h2>
+      {sub && <p className="lux-body max-w-[460px]">{sub}</p>}
+      {right && <div className="mt-2 flex flex-wrap justify-center items-center gap-3">{right}</div>}
     </div>
   )
 }
@@ -135,7 +134,7 @@ function Readout() {
         {[[-DAY, 'm1d'], [DAY, 'p1d'], [7 * DAY, 'p1w'], [SYNODIC_H * HOUR, 'nextLunar']].map(([d, k]) => (
           <button key={k} className="navlink !text-[10px]" onClick={() => shiftTime(d)}>{t(k)}</button>
         ))}
-        <button className="cta !py-2 !text-[11px] ml-auto" onClick={() => { setScenarioB({ siteId: site.id, time: time + 12 * DAY }); document.getElementById('scenario')?.scrollIntoView({ behavior: 'smooth' }) }}>{t('compareSlip')}</button>
+        <button className="capsule capsule-primary ml-auto" onClick={() => { setScenarioB({ siteId: site.id, time: time + 12 * DAY }); document.getElementById('scenario')?.scrollIntoView({ behavior: 'smooth' }) }}>{t('compareSlip')}</button>
       </div>
       {kids && <p className="kids mt-6">{t('kids.card')}</p>}
     </div>
@@ -310,7 +309,7 @@ export default function Navigator() {
     <section id="navigator" className="py-[var(--section-gap)] scroll-mt-2">
       <div className="wrap">
         <Reveal>
-          <SectionHead n="02" kicker={t('nav.nav')} title={t('nav2.title')} right={
+          <SectionHead kicker={t('nav.nav')} title={t('nav2.title')} sub={t('nav5.sub')} right={
             <div className="flex flex-wrap items-center gap-5">
               {mockData && <span className="mono-sm text-warn border border-warn/50 rounded-[var(--radius-tag)] px-2 py-1">{t('demo')}</span>}
               <label className="flex items-center gap-3">

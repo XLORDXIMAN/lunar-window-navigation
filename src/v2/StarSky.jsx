@@ -70,5 +70,5 @@ export default function StarSky() {
     raf = requestAnimationFrame(draw)
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', resize) }
   }, [])
-  return <canvas ref={ref} className="fixed inset-0 w-full h-full pointer-events-none -z-10" aria-hidden="true" />
+  return <canvas ref={ref} className="fixed inset-0 w-full h-full pointer-events-none -z-10 opacity-50" aria-hidden="true" />
 }

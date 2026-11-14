@@ -29,7 +29,7 @@ export function Windows() {
   return (
     <section id="windows" className="py-[var(--section-gap)]">
       <div className="wrap">
-        <Reveal><SectionHead n="03" kicker={t('windows', { n: DAYS })} title={t('win2.title')} right={
+        <Reveal><SectionHead kicker={t('windows', { n: DAYS })} title={t('win2.title')} sub={t('win5.sub')} right={
           <div className="flex flex-wrap gap-2">
             {[['both', t('lBoth')], ['sun', t('lSun')], ['link', t('lLink')], ['none', t('win3.none')]].map(([k, l]) => (
               <span key={k} className="flex items-center gap-2 text-[13px] text-ice/70 mr-4"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: CELL[k] }} />{l}</span>
@@ -128,8 +128,8 @@ export function Scenario() {
   return (
     <section id="scenario" className="py-[var(--section-gap)]">
       <div className="wrap">
-        <Reveal><SectionHead n="04" kicker={t('slip')} title={t('scen2.title', { d: days })} right={
-          <button className="chip hover:border-ice/40" onClick={() => setScenarioB({ siteId: siteA.id, time: time + 12 * DAY })}>↺ {t('reset')}</button>} /></Reveal>
+        <Reveal><SectionHead kicker={t('slip')} title={t('scen2.title', { d: days })} sub={t('scen5.sub')} right={
+          <button className="capsule" onClick={() => setScenarioB({ siteId: siteA.id, time: time + 12 * DAY })}>↺ {t('reset')}</button>} /></Reveal>
 
         <Reveal className="glass overflow-hidden">
         <div className="grid md:grid-cols-[1fr_auto_1fr] items-stretch border-b border-white/10">
@@ -174,7 +174,29 @@ export function Scenario() {
   )
 }
 
-/* ---------------- four steps + footer ---------------- */
+/* ---------------- four steps, closing choice, footer ---------------- */
+function Emblem({ kind }) {
+  return (
+    <svg viewBox="0 0 300 160" className="w-full max-w-[320px] flex-1 [mask-image:radial-gradient(70%_80%_at_50%_45%,black,transparent)]" aria-hidden="true">
+      <g stroke="rgba(186,207,247,.1)" fill="none">
+        <path d="M0 80 H90 l10 -10 H120" /><path d="M300 80 H210 l-10 10 H180" /><path d="M150 0 V40" /><path d="M150 160 V120" />
+      </g>
+      {kind === 'nav' ? (
+        <g>
+          <rect x="100" y="40" width="100" height="80" rx="18" fill="#0a0c17" stroke="rgba(216,236,248,.22)" />
+          <path d="M118 96 L140 70 L156 84 L170 66 L184 96 Z" fill="none" stroke="rgba(152,192,239,.7)" />
+          <rect x="166" y="54" width="7" height="7" fill="#ffab5c" />
+        </g>
+      ) : (
+        <g>
+          <circle cx="150" cy="80" r="42" fill="#0a0c17" stroke="rgba(216,236,248,.22)" />
+          <path d="M126 80 h48 M162 68 l12 12 -12 12" fill="none" stroke="rgba(152,192,239,.75)" />
+        </g>
+      )}
+      {[[90, 80], [210, 80], [150, 40], [150, 120]].map(([x, y]) => <circle key={`${x}${y}`} cx={x} cy={y} r="2" fill="#c2ccff" opacity=".7" />)}
+    </svg>
+  )
+}
 export function Info() {
   const t = useT()
   const icons = ['moon', 'time', 'sun', 'earth']
@@ -182,22 +204,32 @@ export function Info() {
     <>
       <section id="how" className="py-[var(--section-gap)]">
         <div className="wrap">
-          <Reveal><SectionHead n="05" kicker={t('nav.how')} title={t('how2.title')} /></Reveal>
-          <Reveal className="glass grid sm:grid-cols-2 xl:grid-cols-4">
+          <Reveal><SectionHead kicker={t('nav.how')} title={t('how2.title')} sub={t('how5.sub')} /></Reveal>
+          <Reveal className="mx-auto max-w-[1076px] grid sm:grid-cols-2 xl:grid-cols-4 border-y border-[rgba(186,207,247,.1)]">
             {t('how.steps').map(([h, p], i) => (
-              <div key={i} className={`p-8 flex flex-col gap-4 border-white/10 ${i > 0 ? 'xl:border-l' : ''} ${i % 2 ? 'sm:border-l' : ''} ${i > 1 ? 'sm:border-t xl:border-t-0' : ''} ${i > 0 ? 'border-t sm:border-t-0' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-[15px] text-fog">0{i + 1}</span>
-                  <PixelIcon name={icons[i]} size={36} />
-                </div>
-                <h3 className="font-display font-semibold text-[22px]">{h}</h3>
-                <p className="text-[15px] leading-[1.6] text-ice/65">{p}</p>
+              <div key={i} className={`px-8 py-12 flex flex-col gap-3 border-[rgba(186,207,247,.1)] ${i > 0 ? 'xl:border-l' : ''} ${i % 2 ? 'sm:border-l' : ''} ${i > 1 ? 'sm:border-t xl:border-t-0' : ''} ${i > 0 ? 'border-t sm:border-t-0' : ''}`}>
+                <span className="text-[13px] lux-muted">0{i + 1}</span>
+                <h3 className="lux-h-card !text-[22px] !leading-[28px]">{h}</h3>
+                <p className="lux-body !text-[15px]">{p}</p>
               </div>
             ))}
           </Reveal>
-          <div className="flex justify-center mt-14">
-            <button className="cta" onClick={() => document.getElementById('navigator')?.scrollIntoView({ behavior: 'smooth' })}>{t('hero.cta')} ↗</button>
+        </div>
+      </section>
+
+      <section id="go" className="pt-[180px] pb-[120px]">
+        <div className="wrap">
+          <Reveal className="text-center mb-14"><h2 className="h-section !font-normal">{t('close.title')}</h2></Reveal>
+          <div className="mx-auto max-w-[940px] grid md:grid-cols-2 gap-6">
+            {[['navigator', t('close.a1'), t('close.a2'), 'nav'], ['scenario', t('close.b1'), t('close.b2'), 'slip']].map(([id, h, p, kind]) => (
+              <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} className="lux-glass reg-dots h-[332px] flex flex-col justify-end items-center text-center p-8 overflow-hidden">
+                <Emblem kind={kind} />
+                <div className="lux-h-card mt-6">{h}</div>
+                <div className="text-[15px] lux-muted mt-2">{p}</div>
+              </button>
+            ))}
           </div>
+          <div className="flex justify-center mt-24"><button className="capsule" onClick={() => document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' })}>↑ {t('close.top')}</button></div>
         </div>
       </section>
 
