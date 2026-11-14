@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useStore, loadSites } from './store.js'
 import { useT } from './lib/i18n.js'
 import Starfield from './components/Starfield.jsx'
-import Intro from './components/VideoIntro.jsx'
+import Intro from './v2/Intro.jsx'
 import TopBar from './components/TopBar.jsx'
 import SiteCatalog from './components/SiteCatalog.jsx'
 import MoonScene from './components/MoonScene.jsx'
@@ -11,7 +11,8 @@ import SiteCard from './components/SiteCard.jsx'
 import Timeline from './components/Timeline.jsx'
 import WindowBars from './components/WindowBars.jsx'
 import ScenarioCompare from './components/ScenarioCompare.jsx'
-import Hero from './components/Hero.jsx'
+import Hero from './v2/Hero.jsx'
+import Columns from './v2/Columns.jsx'
 import About from './components/About.jsx'
 import { Reveal } from './lib/ui.jsx'
 import { HOUR } from './lib/ephem.js'
@@ -45,11 +46,11 @@ export default function App() {
 
   return (
     <>
-      <Starfield />
-      {boot && <Intro onDone={done} />}
+            {boot && <Intro onDone={done} />}
       {!ready ? <div className="min-h-screen grid place-items-center label">{t('loading')}</div> : !boot && (
         <>
           <Hero />
+          <Columns />
           <main id="navigator" className="scroll-mt-2 w-full max-w-[1760px] mx-auto px-3 md:px-4 flex flex-col gap-3">
             <Reveal><TopBar /></Reveal>
             <div className="grid gap-3 grid-cols-1 xl:grid-cols-[290px_1fr_350px]">
