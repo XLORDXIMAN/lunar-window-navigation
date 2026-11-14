@@ -1,16 +1,20 @@
 import { create } from 'zustand'
 import { MOCK_SITES } from './data/sites.js'
-import { mockHorizon, T0, DAY } from './lib/ephem.js'
+import { mockHorizon, setEphemeris, T0, DAY } from './lib/ephem.js'
 
 // Try real data from participant 2 (/public/data/sites.json); fall back to mocks.
 export async function loadSites() {
   try {
-    const r = await fetch('/data/sites.json')
-    if (r.ok) {
-      const real = await r.json()
-      return { sites: real.map((s) => ({ ...s, horizon: s.horizon?.length === 360 ? s.horizon : mockHorizon(s) })), mock: false }
+    const [rs, re] = await Promise.all([fetch('/data/sites.json'), fetch('/data/ephem.json')])
+    if (rs.ok && re.ok) {
+      const [real, eph] = await Promise.all([rs.json(), re.json()])
+      setEphemeris(eph)
+      return {
+        sites: real.map((s) => ({ ...s, horizonMock: !(s.horizon?.length === 360), horizon: s.horizon?.length === 360 ? s.horizon : mockHorizon(s) })),
+        mock: false,
+      }
     }
-  } catch { /* no real data yet */ }
+  } catch { /* no real data yet — keep the analytic demo model */ }
   return { sites: MOCK_SITES.map((s) => ({ ...s, horizon: mockHorizon(s) })), mock: true }
 }
 
@@ -30,7 +34,15 @@ export const useStore = create((set, get) => ({
   catFilter: 'all',
   lang: 'ru',
 
-  setSites: (sites, mockData) => set({ sites, mockData }),
+  setSites: (sites, mockData) => set((s) => {
+    // keep the selection valid when the catalog ids change (mock → real data)
+    const has = (id) => sites.some((x) => x.id === id)
+    const pick = (...ids) => ids.find(has) ?? sites[0]?.id
+    const selectedId = has(s.selectedId) ? s.selectedId : pick('artemis-malapert-massif', 'malapert')
+    let compareIds = s.compareIds.filter(has)
+    if (compareIds.length === 0) compareIds = ['artemis-malapert-massif', 'artemis-mons-mouton', 'artemis-de-gerlache-rim-2', 'cnsa-change-4'].filter(has)
+    return { sites, mockData, selectedId, compareIds }
+  }),
   select: (id) => set({ selectedId: id }),
   toggleCompare: (id) => set((s) => ({ compareIds: s.compareIds.includes(id) ? s.compareIds.filter((x) => x !== id) : [...s.compareIds, id].slice(-6) })),
   setTime: (t) => set({ time: Math.max(get().rangeStart, Math.min(get().rangeStart + get().rangeDays * DAY, t)) }),

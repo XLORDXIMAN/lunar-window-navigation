@@ -11,6 +11,7 @@ export default function HorizonPlot() {
   const t = useT()
   const site = useSite()
   const time = useStore((s) => s.time)
+  const mock = useStore((s) => s.mockData)
   if (!site) return null
   const polar = Math.abs(site.lat) > 60
   const st = stateAt(site, time)
@@ -69,6 +70,7 @@ export default function HorizonPlot() {
         </g>
       </svg>
       <div className="mono-sm text-fog mt-2 normal-case tracking-[.04em]">{t('hzNote')}</div>
+      {!mock && <div className={`mono-sm mt-1 normal-case tracking-[.04em] ${site.horizonMock ? 'text-warn' : 'text-go'}`}>● {site.horizonMock ? t('hzSynthetic') : t('hzReal')}</div>}
     </div>
   )
 }

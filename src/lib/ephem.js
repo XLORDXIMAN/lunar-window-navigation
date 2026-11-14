@@ -48,8 +48,29 @@ export function subEarth(t) {
   }
 }
 
-export const sunPos = (site, t) => { const s = subSolar(t); return altaz(site.lat, s.lat, site.lon - s.lon) }
-export const earthPos = (site, t) => { const e = subEarth(t); return altaz(site.lat, e.lat, site.lon - e.lon) }
+// ---------- REAL ephemerides (backend export: DE440s + MOON_ME, hourly) ----------
+// public/data/ephem.json → { meta: { start_utc, step_hours, n }, sites: { id: { sun_el, sun_az, earth_el, earth_az } } }
+// Values are centi-degrees. Sites without real data (custom points) use the analytic model.
+let REAL = null
+export function setEphemeris(data) {
+  REAL = data ? { t0: Date.parse(data.meta.start_utc), step: data.meta.step_hours * HOUR, n: data.meta.n, sites: data.sites, meta: data.meta } : null
+  cache.clear()
+}
+export const ephemerisSource = () => (REAL ? REAL.meta.source : null)
+function realPos(site, t, elKey, azKey) {
+  const s = REAL?.sites[site.id]
+  if (!s) return null
+  const x = (t - REAL.t0) / REAL.step
+  if (x < 0 || x > REAL.n - 1) return null
+  const i = Math.min(REAL.n - 2, Math.floor(x)), f = x - i
+  const el = (s[elKey][i] * (1 - f) + s[elKey][i + 1] * f) / 100
+  let a0 = s[azKey][i] / 100, a1 = s[azKey][i + 1] / 100
+  if (a1 - a0 > 180) a1 -= 360; else if (a0 - a1 > 180) a1 += 360
+  return { el, az: ((a0 + (a1 - a0) * f) % 360 + 360) % 360 }
+}
+
+export const sunPos = (site, t) => realPos(site, t, 'sun_el', 'sun_az') ?? (() => { const s = subSolar(t); return altaz(site.lat, s.lat, site.lon - s.lon) })()
+export const earthPos = (site, t) => realPos(site, t, 'earth_el', 'earth_az') ?? (() => { const e = subEarth(t); return altaz(site.lat, e.lat, site.lon - e.lon) })()
 
 // ---------- MOCK terrain horizon (replace with LOLA-derived horizon[360]) ----------
 function rng(seedStr) {
