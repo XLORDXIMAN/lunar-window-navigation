@@ -3,6 +3,8 @@
 .claude/
 .vercel
 blender/intro_frames/
+data_raw/
 design/
 dist
 node_modules
+scripts/.venv/
