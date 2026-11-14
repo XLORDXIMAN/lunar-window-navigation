@@ -491,6 +491,29 @@ export class MoonScene {
     this.listeners.get(event)?.delete(fn);
   }
 
+  /** Stop rendering while the host page shows something else (added in integration). */
+  pause() {
+    if (this.fallback || this._paused) return;
+    this._paused = true;
+    this.renderer.setAnimationLoop(null);
+  }
+
+  /** Resume rendering; dt is clamped in _tick so simulations continue smoothly. */
+  resume() {
+    if (this.fallback || !this._paused) return;
+    this._paused = false;
+    this._last = performance.now();
+    this._resize();
+    this.renderer.setAnimationLoop((t) => this._tick(t));
+  }
+
+  /** Cap the render resolution (host chooses quality vs. smoothness). */
+  setMaxPixelRatio(r) {
+    if (this.fallback) return;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, r));
+    this._resize();
+  }
+
   dispose() {
     this.disposed = true;
     this.hud.dispose();

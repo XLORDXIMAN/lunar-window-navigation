@@ -121,7 +121,7 @@ function Readout() {
           <div>
             <dt className="mono-sm text-fog mb-1">{t('best')}</dt>
             <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-[15px] text-go whitespace-nowrap">{f.day(best.start)} → {f.day(best.end)}</span>
+              <span className="text-[15px] text-go sm:whitespace-nowrap">{f.day(best.start)} → {f.day(best.end)}</span>
               <button className="mono-sm text-ice hover:text-signal" onClick={() => setTime(best.start)}>{t('jump')}</button>
             </dd>
           </div>

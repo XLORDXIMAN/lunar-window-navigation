@@ -27,7 +27,7 @@ export function Nav() {
       <button onClick={() => go('top')} aria-label="LunarWindow" className="justify-self-center"><FlagMark className="w-8 h-6" /></button>
       <div className="justify-self-end flex items-center gap-2">
         <div className="seg hidden sm:inline-flex">{['ru', 'en'].map((l) => <button key={l} onClick={() => setLang(l)} className={lang === l ? 'on' : ''}>{l.toUpperCase()}</button>)}</div>
-        <button className="capsule" onClick={() => go('navigator')}>{t('hero.cta')}</button>
+        <button className="capsule" onClick={() => go('navigator')}><span className="hidden sm:inline">{t('hero.cta')}</span><span className="sm:hidden">{t('nav.nav')}</span></button>
       </div>
     </nav>
   )
@@ -54,7 +54,7 @@ function Spotlights() {
     <div className="absolute inset-x-0 -top-24 h-[760px] pointer-events-none [mask-image:linear-gradient(to_bottom,black_40%,transparent)]" aria-hidden="true">
       {beams.map((b, i) => (
         <div key={i} className="absolute top-0 -translate-x-1/2 h-full origin-top" style={{
-          left: b.l, width: b.w, filter: 'blur(15px)', animation: `spot ${b.dur} ease-in-out ${b.d} infinite`,
+          left: b.l, width: b.w, filter: 'blur(15px)', willChange: 'transform, opacity', animation: `spot ${b.dur} ease-in-out ${b.d} infinite`,
           background: 'conic-gradient(from 180deg at 50% 0%, transparent 45%, rgba(124,145,182,.3) 49%, rgba(124,145,182,.5) 50%, rgba(124,145,182,.3) 51%, transparent 55%)',
         }} />
       ))}

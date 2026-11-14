@@ -8,10 +8,12 @@ export function useScrollFX() {
   useEffect(() => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const cur = new WeakMap()
-    let raf = 0
+    let raf = 0, lastY = -1, still = 0
     const bar = document.getElementById('sfx-progress')
     let barP = 0
     const tick = () => {
+      raf = requestAnimationFrame(tick)
+      if (scrollY === lastY) { if (++still > 90) return } else { still = 0; lastY = scrollY } // sleep ~1.5 s after scrolling stops
       const vh = innerHeight
       for (const el of document.querySelectorAll('[data-sfx]')) {
         const r = el.getBoundingClientRect()
@@ -25,7 +27,6 @@ export function useScrollFX() {
       const tp = doc.scrollHeight > vh ? scrollY / (doc.scrollHeight - vh) : 0
       barP += (tp - barP) * 0.15
       if (bar) bar.style.transform = `scaleX(${barP.toFixed(4)})`
-      raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     // cursor light on glass panels

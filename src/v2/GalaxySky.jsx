@@ -78,7 +78,7 @@ export default function GalaxySky() {
     const t0 = performance.now()
     let bakedFor = 0
     const resize = () => {
-      dpr = Math.min(1.75, devicePixelRatio || 1)
+      dpr = 1 // soft background: native-resolution pixels are wasted here
       w = c.width = innerWidth * dpr; h = c.height = innerHeight * dpr
       const want = Math.round(Math.hypot(innerWidth, innerHeight) * 1.15)
       if (!galaxy || Math.abs(want - bakedFor) / bakedFor > 0.15) { galaxy = bakeGalaxy(want); bakedFor = want }
@@ -94,8 +94,13 @@ export default function GalaxySky() {
     let rt = 0; const onResize = () => { clearTimeout(rt); rt = setTimeout(resize, 200) }
     addEventListener('resize', onResize)
 
+    let lastDraw = 0
+    const moonCovers = () => { const m = document.getElementById('moon'); if (!m) return false; const r = m.getBoundingClientRect(); return r.top <= 1 && r.bottom >= innerHeight - 1 }
     const draw = (now) => {
-      const dt = Math.min(50, now - last); last = now
+      raf = requestAnimationFrame(draw)
+      if (now - lastDraw < 33 || document.hidden || moonCovers()) return // ~30 fps, and idle behind the full-screen Moon
+      lastDraw = now
+      const dt = Math.min(66, now - last); last = now
       sy += (scrollY - sy) * 0.08 // smoothed scroll for buttery parallax
       const t = (now - t0) / 1000, S = sy * dpr
       ctx.clearRect(0, 0, w, h)
@@ -120,7 +125,7 @@ export default function GalaxySky() {
           ctx.fillRect(x - s.r * 1.8, y - s.r * 0.16, s.r * 3.6, s.r * 0.32)
           ctx.fillRect(x - s.r * 0.16, y - s.r * 1.8, s.r * 0.32, s.r * 3.6)
         }
-        ctx.beginPath(); ctx.arc(x, y, s.r * 0.6, 0, 6.283); ctx.fill()
+        const d = s.r * 1.1; ctx.fillRect(x - d / 2, y - d / 2, d, d)
       }
       if (!reduce) {
         if (!shoot && Math.random() < 0.003) {
@@ -137,7 +142,6 @@ export default function GalaxySky() {
           if (shoot.life <= 0) shoot = null
         }
       }
-      raf = requestAnimationFrame(draw)
     }
     raf = requestAnimationFrame(draw)
     return () => { cancelAnimationFrame(raf); clearTimeout(rt); removeEventListener('resize', onResize) }

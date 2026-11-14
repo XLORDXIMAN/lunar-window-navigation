@@ -35,6 +35,11 @@ export default function MoonSection() {
   useEffect(() => {
     const m = new MoonScene(box.current, { hud: true })
     moon.current = m
+    m.setMaxPixelRatio?.(1.5)
+    m.setDate(new Date(useStore.getState().time)) // start on the app's date, not 'now'
+    // render only while the Moon chapter is on screen (big GPU saving everywhere else)
+    const vis = new IntersectionObserver(([e]) => { if (e.isIntersecting || document.fullscreenElement) m.resume?.(); else m.pause?.() }, { threshold: 0.02 })
+    vis.observe(sec.current)
     const gate = () => { const on = sec.current?.dataset.active === '1'; m.controls && (m.controls.enableZoom = on); if (m.polarView) m.polarView.controls.enableZoom = on }
     const offs = [
       m.on('siteclick', ({ id }) => { if (id) useStore.getState().select(id) }),
@@ -49,7 +54,7 @@ export default function MoonSection() {
     ]
     fetch('/data/ephem_subpoints.json').then((r) => (r.ok ? r.json() : null)).then((e) => { if (e?.rows?.length) m.setEphemeris(e.rows) }).catch(() => {})
     gate()
-    return () => { offs.forEach((off) => typeof off === 'function' && off()); m.dispose(); moon.current = null }
+    return () => { vis.disconnect(); offs.forEach((off) => typeof off === 'function' && off()); m.dispose(); moon.current = null }
   }, [])
 
   // ---- app → scene ----
@@ -65,11 +70,16 @@ export default function MoonSection() {
     if (m.getView() !== 'surface' && !landing) m.flyTo(selectedId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId])
+  // time → scene: immediate first update, then at most ~8 updates/s while ▶ plays (keeps layers cheap)
+  const dateTimer = useRef(null), lastSet = useRef(0)
   useEffect(() => {
     const m = moon.current; if (!m || lapse.current) return
-    const id = requestAnimationFrame(() => m.setDate(new Date(time)))
-    return () => cancelAnimationFrame(id)
+    const apply = () => { lastSet.current = performance.now(); dateTimer.current = null; moon.current?.setDate(new Date(useStore.getState().time)) }
+    const since = performance.now() - lastSet.current
+    if (since > 120) apply()
+    else if (!dateTimer.current) dateTimer.current = setTimeout(apply, 120 - since)
   }, [time])
+  useEffect(() => () => clearTimeout(dateTimer.current), [])
   useEffect(() => {
     moon.current?.setCompareDate(compare ? new Date(scenarioB?.time ?? time + 12 * DAY) : null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,7 +108,7 @@ export default function MoonSection() {
     try {
       if (mode === 'surface') await m.enterSurfaceView(selectedId)
       else if (mode === 'polar') await m.setView('polar', site && site.lat < -80 ? { lat: site.lat, lon: site.lon, altitude: 120 } : undefined)
-      else { if (m.getView() === 'surface') m.exitSurfaceView(); await m.setView('globe') }
+      else await m.setView('globe') // setView leaves the surface view itself (no racing exit)
     } finally { setBusy(false) }
   }
   const land = () => { setActive(true); setResult(null); moon.current?.flyTo(selectedId, { landing: true }) }
@@ -128,7 +138,7 @@ export default function MoonSection() {
       <div className={`absolute top-0 inset-x-0 z-30 wrap pt-8 flex flex-wrap items-start gap-4 transition-opacity duration-500 ${cine ? 'opacity-0 pointer-events-none' : ''}`}>
         <div>
           <div className="eyebrow !justify-start before:!hidden">{t('moon5.eyebrow')}</div>
-          <h2 className="h-section !text-[clamp(26px,3vw,40px)] mt-2">{t('moon5.title')}</h2>
+          <h2 className="h-section !text-[clamp(22px,3vw,40px)] mt-2">{t('moon5.title')}</h2>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <label className="capsule !pr-3 cursor-pointer max-w-[280px]">
@@ -166,7 +176,7 @@ export default function MoonSection() {
 
       {/* bottom control bar */}
       <div className={`absolute z-30 bottom-6 inset-x-0 px-4 flex justify-center transition-opacity duration-500 ${cine ? 'opacity-0 pointer-events-none' : ''}`}>
-        <div className="glass !rounded-[22px] p-2.5 flex flex-wrap items-center justify-center gap-2 max-w-[1200px]">
+        <div className="glass !rounded-[22px] p-2.5 flex flex-nowrap md:flex-wrap items-center md:justify-center gap-2 max-w-[1200px] overflow-x-auto [scrollbar-width:none] [&>*]:shrink-0">
           <button onClick={() => setPlaying(!playing)} className="capsule !w-9 !px-0" aria-label="play">{playing ? '❚❚' : '▶'}</button>
           <button className="capsule !px-3" onClick={() => shiftTime(-DAY)}>−1 {t('d')}</button>
           <span className="text-[13px] text-[var(--lux-ink)] px-1 whitespace-nowrap">{f.dt(time)}</span>
