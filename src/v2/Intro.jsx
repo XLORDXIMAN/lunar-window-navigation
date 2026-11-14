@@ -27,7 +27,8 @@ export default function Intro({ onDone }) {
       try { await document.fonts.load('400 120px Onest') } catch { /* fallback font is fine */ }
       if (cancelled) return
       dpr = Math.min(2, devicePixelRatio || 1)
-      w = c.width = innerWidth * dpr; h = c.height = innerHeight * dpr
+      w = c.width = Math.round(innerWidth * dpr); h = c.height = Math.round(innerHeight * dpr)
+      if (w < 8 || h < 8) { finish(); return }
       // offscreen: flag + divider + wordmark
       const F = Math.min(w * 0.105, 150 * dpr)
       const o = document.createElement('canvas'); o.width = w; o.height = h
@@ -101,7 +102,7 @@ export default function Intro({ onDone }) {
       }
       raf = requestAnimationFrame(frame)
     }
-    build()
+    build().catch(() => finish())
     return () => { cancelled = true; cancelAnimationFrame(raf); clearTimeout(guard) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
