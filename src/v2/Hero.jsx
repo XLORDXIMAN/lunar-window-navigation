@@ -23,7 +23,7 @@ export function FlagMark({ className = 'w-7 h-5' }) {
 export function Nav({ active = 'top' }) {
   const t = useT()
   const { lang, setLang } = useStore()
-  const items = [['navigator', 'nav.nav'], ['how', 'nav.how'], ['data', 'nav.data'], ['team', 'nav.team']]
+  const items = [['navigator', 'nav.nav'], ['windows', 'nav.data'], ['scenario', 'nav.team'], ['how', 'nav.how']]
   return (
     <nav className="wrap flex items-center gap-8 h-[76px]">
       <button onClick={() => go('top')} className="flex items-center gap-3 shrink-0">

@@ -53,6 +53,23 @@ const ICONS = {
     for (let r = 0; r < 3.5; r += 0.5) if (x === 7 + Math.round(r * 0) && Math.round(7.5 - r) === y) return '#47c8ff'
     return (dx > 0 ? d < 5.8 : false) && hash(x, y) > 0.92 ? 'rgba(234,242,255,.25)' : null
   }),
+  // astronaut helmet; visor colour picked by variant
+  astro: (n, v = 0) => grid(16, (x, y) => {
+    const visor = ['#47c8ff', '#ffd23f', '#8b5cff'][v % 3]
+    const dx = x - 7.5, dy = y - 6.5, d = Math.hypot(dx, dy * 1.05)
+    if (y >= 12 && y <= 15 && x >= 2 && x <= 13) return y === 12 ? '#c9d1ee' : x === 7 || x === 8 ? (n % 2 ? '#ff4d6d' : '#7cff6b') : '#eaf2ff' // suit + chest light
+    if (d > 6.2) return null
+    if (d > 5.1) return '#eaf2ff'
+    if (Math.abs(dx) < 4.2 && dy > -3.2 && dy < 2.4) return (x === 5 && y === 4) || (x === 6 && y === 4) ? '#ffffff' : visor
+    return '#c9d1ee'
+  }),
+  data: (n) => grid(16, (x, y) => {
+    const bars = [5, 9, 7, 12, 10, 14]
+    const i = Math.floor((x - 1) / 2.5)
+    if (x < 1 || x > 15 || (x - 1) % 2.5 > 1.6 || i > 5) return null
+    const hgt = Math.max(2, bars[(i + n) % 6])
+    return y >= 15 - hgt ? (y === 15 - hgt ? '#ffd23f' : i % 2 ? '#3d7bff' : '#47c8ff') : null
+  }),
   moon: () => grid(16, (x, y) => {
     const dx = x - 7.5, dy = y - 7.5, d = Math.hypot(dx, dy)
     if (d > 7) return null
@@ -62,11 +79,11 @@ const ICONS = {
   }),
 }
 
-export default function PixelIcon({ name, size = 64, speed = 450, className = '' }) {
+export default function PixelIcon({ name, size = 64, speed = 450, variant = 0, className = '' }) {
   const n = useTick(speed)
   return (
     <svg viewBox="0 0 16 16" width={size} height={size} className={className} shapeRendering="crispEdges" aria-hidden="true">
-      {ICONS[name](n)}
+      {ICONS[name](n, variant)}
     </svg>
   )
 }

@@ -1,67 +1,87 @@
-// Lower spreads: 30-day operating windows, the mission-slip comparison,
-// How it works / NASA data / Team, footer.
+// Lower spreads: 30-day window heatmap, mission slip (A VS B), four steps, footer.
+import { useState } from 'react'
 import { useStore, useSite } from '../store.js'
 import { stateAt, windowMetrics, verdict, DAY, HOUR } from '../lib/ephem.js'
 import { useT, useFmt } from '../lib/i18n.js'
 import { useSiteName, Reveal } from '../lib/ui.jsx'
 import { SectionHead } from './Navigator.jsx'
 import { FlagMark } from './Hero.jsx'
+import PixelIcon from './PixelIcon.jsx'
 
-/* ---------------- 30-day windows ---------------- */
+const follow = (e) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+const CELL = { both: '#7cff6b', sun: '#ff7a1a', link: '#47c8ff', none: 'rgba(234,242,255,.07)' }
+
+/* ---------------- 30-day windows: pixel heatmap (one cell = 6 h) ---------------- */
 export function Windows() {
   const t = useT(), f = useFmt(), nm = useSiteName()
   const { sites, compareIds, time, select, setTime, selectedId, kids } = useStore()
-  const DAYS = 30, STEP = 2
+  const [tip, setTip] = useState(null)
+  const DAYS = 30, STEP = 6, N = (DAYS * 24) / STEP
   const start = Math.floor(time / DAY) * DAY
   const ids = [...new Set([selectedId, ...compareIds])]
   const rows = ids.map((id) => sites.find((s) => s.id === id)).filter(Boolean)
-  const n = (DAYS * 24) / STEP
-  const nowX = ((time - start) / (DAYS * DAY)) * 100
-  const segs = (arr, thr) => { const out = []; let s = -1; for (let i = 0; i <= n; i++) { const on = i < n && arr[i] >= thr; if (on && s < 0) s = i; if (!on && s >= 0) { out.push([s, i]); s = -1 } } return out }
-  const bar = (arr, thr, cls, top) => segs(arr, thr).map(([a, b]) => (
-    <span key={a} className={`absolute ${cls}`} style={{ left: `${(a / n) * 100}%`, width: `${((b - a) / n) * 100}%`, top }} />
-  ))
+  const nowI = Math.floor((time - start) / (STEP * HOUR))
+
   return (
-    <section id="windows" className="bg-carbon py-[var(--section-gap)]">
+    <section id="windows" className="py-[var(--section-gap)]">
       <div className="wrap">
         <Reveal><SectionHead n="03" kicker={t('windows', { n: DAYS })} title={t('win2.title')} right={
-          <div className="flex gap-6 mono-sm">
-            <span className="flex items-center gap-2 text-signal"><i className="w-5 h-[3px] bg-signal" />{t('lSun')}</span>
-            <span className="flex items-center gap-2 text-cobalt-lt"><i className="w-5 h-[3px] bg-cobalt-lt" />{t('lLink')}</span>
-            <span className="flex items-center gap-2 text-go"><i className="w-5 h-[3px] bg-go" />{t('lBoth')}</span>
+          <div className="flex flex-wrap gap-2">
+            {[['both', t('lBoth')], ['sun', t('lSun')], ['link', t('lLink')], ['none', t('win3.none')]].map(([k, l]) => (
+              <span key={k} className="chip"><i className="w-3 h-3 rounded-[3px]" style={{ background: CELL[k], boxShadow: k !== 'none' ? `0 0 10px ${CELL[k]}` : 'none' }} />{l}</span>
+            ))}
           </div>} /></Reveal>
-        <div className="border-t border-ice/20">
+
+        <Reveal className="card p-6 md:p-8" style={{ '--glow': 'rgb(124 255 107 / .16)' }} onMouseMove={follow}>
+          <div className="hidden md:grid grid-cols-[230px_1fr_90px] gap-x-5 mb-3">
+            <span />
+            <div className="relative h-4">
+              {[0, 7, 14, 21, 28].map((d) => <span key={d} className="absolute mono-sm text-fog -translate-x-1/2 whitespace-nowrap" style={{ left: `${(d / DAYS) * 100}%` }}>{f.day(start + d * DAY).replace(/\s*г\.$/, '')}</span>)}
+            </div>
+            <span />
+          </div>
           {rows.map((s) => {
             const m = windowMetrics(s, start, DAYS, STEP)
-            const both = Array.from(m.sun, (v, i) => (v >= 0.5 && m.link[i] ? 1 : 0))
             const on = s.id === selectedId
             return (
-              <div key={s.id} className="grid grid-cols-1 md:grid-cols-[260px_1fr_110px] items-center gap-x-6 gap-y-2 py-5 border-b border-ice/15">
-                <button onClick={() => select(s.id)} className={`text-left text-[15px] truncate ${on ? 'text-ice' : 'text-ice/60 hover:text-ice'}`}>{on && <span className="text-cobalt-lt mr-2">●</span>}{nm(s)}</button>
-                <div className="relative h-10 cursor-crosshair" onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); select(s.id); setTime(start + ((e.clientX - r.left) / r.width) * DAYS * DAY) }}>
-                  {[...Array(DAYS + 1)].map((_, d) => d % 7 === 0 && <span key={d} className="absolute top-0 bottom-0 w-px bg-ice/10" style={{ left: `${(d / DAYS) * 100}%` }} />)}
-                  {bar(m.sun, 0.5, 'h-[3px] bg-signal', '8px')}
-                  {bar(both, 1, 'h-[3px] bg-go', '18px')}
-                  {bar(m.link, 1, 'h-[3px] bg-cobalt-lt', '28px')}
-                  <span className="absolute -top-1 -bottom-1 w-px bg-ice" style={{ left: `${nowX}%` }} />
+              <div key={s.id} className="grid grid-cols-1 md:grid-cols-[230px_1fr_90px] items-center gap-x-5 gap-y-2 py-2.5">
+                <button onClick={() => select(s.id)} className={`text-left text-[15px] truncate font-display font-semibold ${on ? 'text-ice' : 'text-ice/55 hover:text-ice'}`}>
+                  {on && <span className="text-go mr-2">▶</span>}{nm(s).split(' — ')[0]}
+                </button>
+                <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${N}, minmax(0, 1fr))` }} onMouseLeave={() => setTip(null)}>
+                  {Array.from({ length: N }, (_, i) => {
+                    const sun = m.sun[i] >= 0.5, link = m.link[i] === 1
+                    const k = sun && link ? 'both' : sun ? 'sun' : link ? 'link' : 'none'
+                    const ti = start + i * STEP * HOUR
+                    return (
+                      <button key={i} aria-label={f.dt(ti)}
+                        onMouseEnter={() => setTip(`${nm(s).split(' — ')[0]} · ${f.dt(ti)} · ${k === 'both' ? t('lBoth') : k === 'sun' ? t('lSun') : k === 'link' ? t('lLink') : t('win3.none')}`)}
+                        onClick={() => { select(s.id); setTime(ti) }}
+                        className={`h-5 rounded-[3px] transition-transform hover:scale-y-125 ${i === nowI ? 'ring-1 ring-ice' : ''}`}
+                        style={{ background: CELL[k] }} />
+                    )
+                  })}
                 </div>
-                <div className="num text-[13px] text-right"><span className="text-signal">{m.sunPct.toFixed(0)}%</span> <span className="text-fog">/</span> <span className="text-cobalt-lt">{m.linkPct.toFixed(0)}%</span></div>
+                <div className="font-display text-[15px] font-semibold text-right"><span className="grad-sun">{m.sunPct.toFixed(0)}%</span> <span className="text-fog">/</span> <span className="grad-earth">{m.linkPct.toFixed(0)}%</span></div>
               </div>
             )
           })}
-        </div>
-        <div className="hidden md:grid grid-cols-[260px_1fr_110px] gap-x-6 mt-3">
-          <span /><div className="flex justify-between mono-sm text-fog"><span>{f.day(start)}</span><span>{f.day(start + 15 * DAY)}</span><span>{f.day(start + DAYS * DAY)}</span></div><span />
-        </div>
+          <div className="mono-sm text-fog mt-4 min-h-[1.2em] normal-case tracking-[.04em]">{tip ?? t('win3.hint')}</div>
+        </Reveal>
         {kids && <p className="kids mt-6">{t('kids.windows')}</p>}
       </div>
     </section>
   )
 }
 
-/* ---------------- mission slip A vs B ---------------- */
+/* ---------------- mission slip: A VS B ---------------- */
 const evalS = (site, time) => { const m = windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1); return { site, time, m, st: stateAt(site, time), v: verdict(m, site) } }
-const LVL = { green: 'text-go', yellow: 'text-warn', red: 'text-nogo' }
+const VCOL = { green: 'text-go', yellow: 'text-warn', red: 'text-nogo' }
+const VGLOW = { green: 'rgb(124 255 107 / .28)', yellow: 'rgb(255 216 77 / .28)', red: 'rgb(255 77 109 / .32)' }
 
 export function Scenario() {
   const t = useT(), f = useFmt(), nm = useSiteName()
@@ -80,121 +100,110 @@ export function Scenario() {
     ['row.power', (e) => e.m.powerKwhDay, (x) => `${x.toFixed(1)} ${t('kwhDay')}`, 1],
     ['row.battery', (e) => e.m.batteryKwh, (x) => `${x.toFixed(0)} ${t('kwh')}`, -1],
   ]
-  // the three numbers that matter most for the verdict
   const worse = ROWS.filter(([k, g, , d]) => ['row.sun', 'row.link', 'row.dark', 'row.power'].includes(k) && (g(B) - g(A)) * d < -1e-6).map(([k]) => t(k).replace(/\s*\(.*\)/, '').toLowerCase()).slice(0, 3)
   const days = Math.round((b.time - time) / DAY)
 
-  const Col = ({ e, label, editable }) => (
-    <div className={`p-6 ${editable ? 'frame' : 'border border-ice/20 rounded-[var(--radius-btn)]'}`}>
-      <div className="mono-sm text-fog mb-4">{label}</div>
-      {editable ? (
-        <select className="w-full bg-transparent border-b border-ice/30 py-1 text-[17px] outline-none mb-2" value={siteB.id} onChange={(ev) => setScenarioB({ siteId: ev.target.value, time: b.time })}>
-          {sites.map((s) => <option key={s.id} value={s.id} className="bg-black">{nm(s)}</option>)}
-        </select>
-      ) : <div className="text-[17px] mb-2 py-1">{nm(e.site)}</div>}
-      <div className="flex items-center gap-4 mb-4">
-        <span className="num text-[14px] text-ice/80">{f.day(e.time)}</span>
-        {editable && [[-1, 'm1d'], [1, 'p1d'], [7, 'p1w']].map(([d, k]) => <button key={k} className="navlink !text-[10px]" onClick={() => setScenarioB({ siteId: siteB.id, time: b.time + d * DAY })}>{t(k)}</button>)}
+  const side = (e, label, editable) => (
+    <div className="card p-7 h-full" style={{ '--glow': VGLOW[e.v.level] }} onMouseMove={follow}>
+      <div className="flex items-center justify-between mb-5 gap-3">
+        <span className="chip">{label}</span>
+        <span className={`font-display font-extrabold italic text-[28px] ${VCOL[e.v.level]}`} style={{ textShadow: `0 0 18px ${VGLOW[e.v.level]}` }}>{t(`v.${e.v.level}`).split(' — ')[0]}</span>
       </div>
-      <div className={`mono !text-[11px] ${LVL[e.v.level]}`}>● {t(`v.${e.v.level}`)}</div>
+      {editable ? (
+        <select className="w-full bg-transparent border-b border-ice/25 py-1 font-display text-[24px] font-bold outline-none mb-2" value={siteB.id} onChange={(ev) => setScenarioB({ siteId: ev.target.value, time: b.time })}>
+          {sites.map((s) => <option key={s.id} value={s.id} className="bg-void text-[15px]">{nm(s)}</option>)}
+        </select>
+      ) : <div className="font-display text-[24px] font-bold py-1 mb-2 truncate">{nm(e.site)}</div>}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="chip">{f.day(e.time)}</span>
+        {editable && [[-1, 'm1d'], [1, 'p1d'], [7, 'p1w']].map(([d, k]) => <button key={k} className="chip hover:border-ice/40 hover:text-ice text-fog" onClick={() => setScenarioB({ siteId: siteB.id, time: b.time + d * DAY })}>{t(k)}</button>)}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div><div className="mono-sm text-fog">{t('row.sun')}</div><div className="font-display text-[40px] font-bold grad-sun leading-none mt-1">{e.m.sunPct.toFixed(0)}%</div></div>
+        <div><div className="mono-sm text-fog">{t('row.link')}</div><div className="font-display text-[40px] font-bold grad-earth leading-none mt-1">{e.m.linkPct.toFixed(0)}%</div></div>
+      </div>
     </div>
   )
 
   return (
-    <section id="scenario" className="bg-black py-[var(--section-gap)]">
+    <section id="scenario" className="py-[var(--section-gap)]">
       <div className="wrap">
         <Reveal><SectionHead n="04" kicker={t('slip')} title={t('scen2.title', { d: days })} right={
-          <button className="navlink" onClick={() => setScenarioB({ siteId: siteA.id, time: time + 12 * DAY })}>{t('reset')}</button>} /></Reveal>
-        <div className="grid md:grid-cols-2 gap-4 mb-10">
-          <Col e={A} label={t('scenA')} />
-          <Col e={B} label={t('scenB')} editable />
+          <button className="chip hover:border-ice/40" onClick={() => setScenarioB({ siteId: siteA.id, time: time + 12 * DAY })}>↺ {t('reset')}</button>} /></Reveal>
+
+        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+          {side(A, t('scenA'), false)}
+          <div className="grid place-items-center">
+            <span className="font-display font-extrabold italic text-[30px] w-16 h-16 grid place-items-center rounded-full" style={{ border: '1px solid rgb(255 122 26 / .45)', boxShadow: '0 0 30px rgb(255 122 26 / .25)' }}><span className="grad-sun">VS</span></span>
+          </div>
+          {side(B, t('scenB'), true)}
         </div>
-        <div className="grid lg:grid-cols-2 gap-x-16 border-t border-ice/20">
-          {ROWS.map(([k, g, fmt, dir]) => {
-            const va = g(A), vb = g(B), d = vb - va, good = d * dir > 1e-6, bad = d * dir < -1e-6
-            const span = k === 'row.sunEl' ? [Math.min(va, vb, -5), Math.max(va, vb, 5)] : [0, Math.max(Math.abs(va), Math.abs(vb), 1e-6) * 1.08]
-            const pct = (v) => `${Math.max(1.5, ((v - span[0]) / (span[1] - span[0])) * 100)}%`
-            return (
-              <div key={k} className="py-5 border-b border-ice/10">
-                <div className="flex items-baseline justify-between gap-4 mb-3">
-                  <span className="text-[15px] text-ice/85">{t(k)}</span>
-                  <span className={`num text-[13px] px-2 py-0.5 rounded-[var(--radius-tag)] border ${good ? 'text-go border-go/40' : bad ? 'text-nogo border-nogo/40' : 'text-fog border-ice/15'}`}>{good ? '▲' : bad ? '▼' : '='} {fmt(Math.abs(d))}</span>
-                </div>
-                {[['A', va, 'bg-ice/70'], ['B', vb, bad ? 'bg-nogo' : good ? 'bg-go' : 'bg-ice/70']].map(([lab, v, col]) => (
-                  <div key={lab} className="grid grid-cols-[18px_1fr_110px] items-center gap-3 mt-1.5">
-                    <span className="mono-sm text-fog">{lab}</span>
-                    <div className="h-[6px] bg-ice/[.06] relative overflow-hidden">
-                      <div className={`absolute inset-y-0 left-0 bar-fill ${col}`} style={{ width: pct(v) }} />
-                    </div>
-                    <span className="num text-[13px] text-right text-ice/90">{fmt(v)}</span>
+
+        <Reveal className="card p-6 md:p-8 mt-4" style={{ '--glow': 'rgb(61 123 255 / .18)' }} onMouseMove={follow}>
+          <div className="grid lg:grid-cols-2 gap-x-14">
+            {ROWS.map(([k, g, fmt, dir]) => {
+              const va = g(A), vb = g(B), d = vb - va, good = d * dir > 1e-6, bad = d * dir < -1e-6
+              const span = k === 'row.sunEl' ? [Math.min(va, vb, -5), Math.max(va, vb, 5)] : [0, Math.max(Math.abs(va), Math.abs(vb), 1e-6) * 1.08]
+              const pct = (v) => `${Math.max(1.5, ((v - span[0]) / (span[1] - span[0])) * 100)}%`
+              return (
+                <div key={k} className="py-4 border-b border-ice/10">
+                  <div className="flex items-baseline justify-between gap-4 mb-2.5">
+                    <span className="text-[15px] text-ice/85">{t(k)}</span>
+                    <span className={`chip !py-1 ${good ? 'text-go border-go/40' : bad ? 'text-nogo border-nogo/40' : 'text-fog'}`}>{good ? '▲' : bad ? '▼' : '='} {fmt(Math.abs(d))}</span>
                   </div>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-        <p className={`font-display text-[clamp(20px,2.2vw,28px)] leading-[1.3] mt-10 max-w-[900px] ${worse.length ? 'text-ice' : 'text-go'}`}>
-          {worse.length ? t('scen2.worse', { v: worse.join(', ') }) : t('allBetter').replace(/^\S+\s/, '')}
-        </p>
+                  {[['A', va, 'linear-gradient(90deg,#eaf2ff80,#eaf2ffcc)'], ['B', vb, bad ? 'linear-gradient(90deg,#ff4d6d,#ff7a1a)' : good ? 'linear-gradient(90deg,#47c8ff,#7cff6b)' : 'linear-gradient(90deg,#eaf2ff80,#eaf2ffcc)']].map(([lab, v, bg]) => (
+                    <div key={lab} className="grid grid-cols-[18px_1fr_110px] items-center gap-3 mt-1.5">
+                      <span className="mono-sm text-fog">{lab}</span>
+                      <div className="h-[8px] rounded-full bg-ice/[.06] relative overflow-hidden">
+                        <div className="absolute inset-y-0 left-0 rounded-full bar-fill" style={{ width: pct(v), background: bg }} />
+                      </div>
+                      <span className="num text-[13px] text-right text-ice/90">{fmt(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+          <p className={`font-display font-bold text-[clamp(20px,2.2vw,28px)] leading-[1.3] mt-8 ${worse.length ? 'text-ice' : 'text-go'}`}>
+            {worse.length ? <>⚠ {t('scen2.worse', { v: worse.join(', ') })}</> : <>✓ {t('allBetter').replace(/^\S+\s/, '')}</>}
+          </p>
+        </Reveal>
       </div>
     </section>
   )
 }
 
-/* ---------------- how / data / team / footer ---------------- */
+/* ---------------- four steps + footer ---------------- */
 export function Info() {
   const t = useT()
-  const mock = useStore((s) => s.mockData)
+  const icons = ['moon', 'time', 'sun', 'earth']
+  const glows = ['rgb(139 92 255 / .3)', 'rgb(255 210 63 / .28)', 'rgb(255 122 26 / .3)', 'rgb(71 200 255 / .3)']
   return (
     <>
-      <section id="how" className="bg-carbon py-[var(--section-gap)]">
+      <section id="how" className="py-[var(--section-gap)]">
         <div className="wrap">
           <Reveal><SectionHead n="05" kicker={t('nav.how')} title={t('how2.title')} /></Reveal>
-          <div className="grid md:grid-cols-2 xl:grid-cols-4 border-t border-ice/20">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {t('how.steps').map(([h, p], i) => (
-              <Reveal key={i} delay={i * 0.06} className={`pt-8 pb-10 pr-8 ${i > 0 ? 'xl:border-l xl:pl-8' : ''} border-ice/20`}>
-                <div className="font-display text-[56px] leading-none text-fog/60 mb-6">0{i + 1}</div>
-                <h3 className="h-sm mb-3">{h}</h3>
-                <p className="text-[15px] leading-[1.6] text-fog">{p}</p>
+              <Reveal key={i} delay={i * 0.08} className="card p-7 flex flex-col gap-5" style={{ '--glow': glows[i] }} onMouseMove={follow}>
+                <div className="flex items-center justify-between">
+                  <span className="font-display font-extrabold italic text-[56px] leading-none text-ice/15">0{i + 1}</span>
+                  <PixelIcon name={icons[i]} size={56} />
+                </div>
+                <h3 className="font-display font-bold text-[24px] uppercase">{h}</h3>
+                <p className="text-[15px] leading-[1.6] text-ice/65">{p}</p>
               </Reveal>
             ))}
+          </div>
+          <div className="flex justify-center mt-14">
+            <button className="cta !text-[13px] !px-8 !py-4" onClick={() => document.getElementById('navigator')?.scrollIntoView({ behavior: 'smooth' })}>{t('hero.cta')} ↗</button>
           </div>
         </div>
       </section>
 
-      <section id="data" className="bg-black py-[var(--section-gap)]">
-        <div className="wrap">
-          <Reveal><SectionHead n="06" kicker={t('nav.data')} title={t('data2.title')} /></Reveal>
-          <div className="border-t border-ice/20">
-            {t('data.items').map(([h, p], i) => (
-              <Reveal key={i} delay={i * 0.05} className="grid md:grid-cols-[320px_1fr] gap-x-10 gap-y-2 py-6 border-b border-ice/15">
-                <span className="mono text-ice">{h}</span>
-                <span className="text-[16px] leading-[1.6] text-fog">{p}</span>
-              </Reveal>
-            ))}
-          </div>
-          <p className={`mono-sm mt-6 normal-case tracking-[.04em] ${mock ? 'text-warn' : 'text-go'}`}>● {mock ? t('data.demo') : t('data.real')}</p>
-        </div>
-      </section>
-
-      <section id="team" className="bg-carbon py-[var(--section-gap)]">
-        <div className="wrap">
-          <Reveal><SectionHead n="07" kicker={t('nav.team')} title={t('team2.title')} /></Reveal>
-          <div className="grid md:grid-cols-3 border-t border-ice/20">
-            {t('team.roles').map(([who, role], i) => (
-              <Reveal key={i} delay={i * 0.06} className={`pt-8 pb-10 pr-8 ${i > 0 ? 'md:border-l md:pl-8' : ''} border-ice/20`}>
-                <div className="mono-sm text-fog mb-6">{who}</div>
-                <p className="h-sm">{role}</p>
-              </Reveal>
-            ))}
-          </div>
-          <p className="mono text-fog mt-10">{t('team.place')}</p>
-        </div>
-      </section>
-
-      <footer className="bg-black border-t border-ice/15">
-        <div className="wrap py-10 flex flex-wrap items-center gap-6">
-          <FlagMark /><span className="font-display text-[15px]">MainTech</span>
+      <footer className="border-t border-ice/10">
+        <div className="wrap py-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <FlagMark /><span className="font-display text-[18px] font-bold">Lunar<span className="accent">Window</span></span>
           <span className="mono-sm text-fog ml-auto normal-case tracking-[.04em]">{t('footer')}</span>
         </div>
       </footer>
