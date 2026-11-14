@@ -1,0 +1,105 @@
+import { useStore } from '../store.js'
+
+const D = {
+  ru: {
+    brand: 'LUNARWINDOW', subtitle: 'Навигатор мест посадки на Луну', team: 'КОМАНДА MAINTECH',
+    demo: 'ДЕМО-ДАННЫЕ', landingDate: 'Дата посадки', explain: '🎓 Объяснить', loading: 'Загрузка данных миссии…',
+    sites: 'Места посадки', search: 'Поиск…', all: 'Все', custom: 'Свои координаты', lat: 'широта', lon: 'долгота',
+    evaluate: 'Оценить точку', priorities: 'Приоритеты миссии', top3: 'Топ-3 на эту дату',
+    'w.power': '☀ Энергия', 'w.comm': '📡 Связь', 'w.duration': '⏱ Короткие ночи', 'w.safety': '⛰ Ровный рельеф',
+    'cat.apollo': 'Apollo', 'cat.artemis': 'Artemis III', 'cat.clps': 'CLPS / частные', 'cat.intl': 'Другие страны', 'cat.custom': 'Своя точка',
+    horizon: 'Вид горизонта', sunVisible: 'СОЛНЦЕ ВИДНО', sunPartial: 'ВИДНО {p}% ДИСКА', sunBlocked: 'СОЛНЦЕ ЗА ГОРИЗОНТОМ',
+    linkOn: 'СВЯЗЬ С ЗЕМЛЁЙ ЕСТЬ', linkOff: 'СВЯЗИ С ЗЕМЛЁЙ НЕТ', sun: 'Солнце', earth: 'Земля', lander: 'модуль',
+    hzNote: 'рельеф по вертикали преувеличен · атмосферы нет → нет рефракции · небо всегда чёрное',
+    'v.green': 'GO — ХОРОШЕЕ ОКНО ПОСАДКИ', 'v.yellow': 'НА ГРАНИ — ПРОВЕРЬТЕ ОГРАНИЧЕНИЯ', 'v.red': 'NO-GO НА ЭТУ ДАТУ',
+    'r.sun': 'солнце {v}%', 'r.lowSun': 'мало солнца {v}%', 'r.link': 'связь {v}%', 'r.noLink': 'НЕТ прямой связи — нужен ретранслятор',
+    'r.lowLink': 'связь лишь {v}%', 'r.night': 'самая длинная ночь {v}', 'r.slope': 'уклон {v}° — слишком круто',
+    mission14: 'Миссия 14 суток с выбранной даты',
+    sunEl: 'УГОЛ СОЛНЦА', sunsetIn: 'ЗАКАТ ЧЕРЕЗ', sunriseIn: 'ВОСХОД ЧЕРЕЗ', earthsetIn: 'ЗАХОД ЗЕМЛИ', earthriseIn: 'ВОСХОД ЗЕМЛИ', earthEl: 'УГОЛ ЗЕМЛИ',
+    noSunset: 'не зайдёт 60 сут', none60: 'нет 60 сут', always: 'видна всегда', never: 'НИКОГДА',
+    sunlight: 'Освещённость', dte: 'Прямая связь с Землёй', longestDark: 'Самая длинная темнота', longestBlackout: 'Самый долгий обрыв связи',
+    avgEl: 'Ср. угол Солнца', power: 'Энергия (панель 10 м²)', battery: 'Батарея на ночь*', kwhDay: 'кВт·ч/сут', kwh: 'кВт·ч',
+    best: 'Лучшее окно 7 суток (ближайшие 60)', jump: 'Перейти →', slip: 'Перенос миссии',
+    m1d: '−1 сут', p1d: '+1 сут', p1w: '+1 неделя', nextLunar: 'Следующие лунные сутки',
+    compareSlip: '⚖ Сравнить перенос +12 сут', addBars: '+ В полосы', batteryNote: '*Батарея на нагрузку выживания 1 кВт на всё время темноты.',
+    perTick: '/шаг', h1: '1ч', h6: '6ч', d1: '1сут',
+    windows: 'Окна работы · ближайшие {n} суток', lSun: 'солнце', lLink: 'связь', lBoth: 'и то и другое',
+    scenario: 'Сравнение сценариев · перенос даты / другая точка', reset: 'Сброс: та же точка +12 сут',
+    scenA: 'Сценарий A · базовый', scenB: 'Сценарий B · альтернатива', delta: 'Δ Изменение',
+    'row.sunEl': 'Угол Солнца при посадке', 'row.sun': 'Освещённость (14 сут)', 'row.link': 'Связь с Землёй (14 сут)',
+    'row.dark': 'Самая длинная темнота', 'row.blackout': 'Самый долгий обрыв связи', 'row.power': 'Энергия', 'row.battery': 'Нужна батарея',
+    allBetter: '✅ Сценарий B не хуже по всем показателям.', worseOn: '⚠ Сценарий B хуже по: {v}.',
+    'view.pole': 'Южный полюс', 'view.near': 'Ближняя сторона', 'view.far': 'Обратная сторона', zoomIn: 'Приблизить', zoomOut: 'Отдалить',
+    scene3d: 'Луна · 3D-сцена в разработке', subSolar: 'Точка под Солнцем', subEarth: 'Точка под Землёй',
+    footer: 'Данные: NASA LRO/LOLA · JPL Horizons · Moon Trek · NASA Space Apps Challenge 2026 · Астана · команда MainTech',
+    'kids.priorities': 'Двигай ползунки — скажи компьютеру, что важнее для твоей миссии. Рейтинг пересчитается мгновенно.',
+    'kids.horizon': 'Так видит горизонт астронавт, если повернуться вокруг себя. У Южного полюса Солнце никогда не поднимается выше ~1.5° — оно просто ползёт вдоль горизонта. Если на пути гора — панели не получают энергию. Земля почти не двигается по небу, поэтому горы могут закрыть связь на несколько дней.',
+    'kids.card': 'Обратный отсчёт показывает ЦУПу, сколько осталось до момента, когда Солнце или Земля скроются за рельефом — тогда пропадёт энергия или связь.',
+    'kids.windows': 'Каждая строка — одно место посадки. Жёлтое — Солнце светит, голубое — есть связь с Землёй. Зелёное — и то и другое: лучшее время садиться!',
+    boot: ['MAINTECH MISSION CONTROL', 'Инициализация навигатора…', 'Загрузка рельефа LRO / LOLA…', 'Расчёт эфемерид Солнца и Земли…', 'Профили горизонта: готово', 'ВСЕ СИСТЕМЫ В НОРМЕ ▸ GO'],
+    skip: 'нажмите, чтобы пропустить', d: 'д', h: 'ч',
+  },
+  en: {
+    brand: 'LUNARWINDOW', subtitle: 'Lunar Landing Site Navigator', team: 'TEAM MAINTECH',
+    demo: 'DEMO DATA', landingDate: 'Landing date', explain: '🎓 Explain', loading: 'Loading mission data…',
+    sites: 'Landing sites', search: 'Search…', all: 'All', custom: 'Custom coordinates', lat: 'lat', lon: 'lon',
+    evaluate: 'Evaluate site', priorities: 'Mission priorities', top3: 'Top 3 for this date',
+    'w.power': '☀ Power', 'w.comm': '📡 Earth link', 'w.duration': '⏱ Short nights', 'w.safety': '⛰ Flat terrain',
+    'cat.apollo': 'Apollo', 'cat.artemis': 'Artemis III', 'cat.clps': 'CLPS / Commercial', 'cat.intl': 'International', 'cat.custom': 'Custom',
+    horizon: 'Horizon view', sunVisible: 'SUN VISIBLE', sunPartial: '{p}% OF DISK', sunBlocked: 'SUN BLOCKED',
+    linkOn: 'EARTH LINK ON', linkOff: 'EARTH LINK OFF', sun: 'Sun', earth: 'Earth', lander: 'lander',
+    hzNote: 'vertical scale exaggerated · no atmosphere → no refraction · the sky is always black',
+    'v.green': 'GO — GOOD LANDING WINDOW', 'v.yellow': 'MARGINAL — CHECK CONSTRAINTS', 'v.red': 'NO-GO FOR THIS DATE',
+    'r.sun': 'sun {v}%', 'r.lowSun': 'low sun {v}%', 'r.link': 'Earth link {v}%', 'r.noLink': 'NO direct Earth link — relay needed',
+    'r.lowLink': 'Earth link only {v}%', 'r.night': 'longest night {v}', 'r.slope': 'slope {v}° too steep',
+    mission14: '14-day surface mission from selected date',
+    sunEl: 'SUN ELEVATION', sunsetIn: 'SUNSET IN', sunriseIn: 'SUNRISE IN', earthsetIn: 'EARTHSET IN', earthriseIn: 'EARTHRISE IN', earthEl: 'EARTH ELEVATION',
+    noSunset: 'none in 60d', none60: 'none in 60d', always: 'always visible', never: 'NEVER',
+    sunlight: 'Sunlight', dte: 'Direct-to-Earth link', longestDark: 'Longest darkness', longestBlackout: 'Longest comm blackout',
+    avgEl: 'Avg sun elev. (lit)', power: 'Power (10 m² array)', battery: 'Battery for night*', kwhDay: 'kWh/day', kwh: 'kWh',
+    best: 'Best 7-day window (next 60 days)', jump: 'Jump →', slip: 'Schedule slip',
+    m1d: '−1d', p1d: '+1d', p1w: '+1 week', nextLunar: 'Next lunar day',
+    compareSlip: '⚖ Compare slip +12d', addBars: '+ Bars', batteryNote: '*Battery sized for 1 kW survival load through the longest darkness.',
+    perTick: '/tick', h1: '1h', h6: '6h', d1: '1d',
+    windows: 'Operational windows · next {n} days', lSun: 'sunlight', lLink: 'Earth link', lBoth: 'both',
+    scenario: 'Scenario comparison · schedule slip / alternate site', reset: 'Reset: same site +12d',
+    scenA: 'Scenario A · baseline', scenB: 'Scenario B · alternative', delta: 'Δ Change',
+    'row.sunEl': 'Sun elevation at landing', 'row.sun': 'Sunlight (14 d)', 'row.link': 'Earth link (14 d)',
+    'row.dark': 'Longest darkness', 'row.blackout': 'Longest comm blackout', 'row.power': 'Power', 'row.battery': 'Battery needed',
+    allBetter: '✅ Scenario B is as good or better on every metric.', worseOn: '⚠ Scenario B is worse on: {v}.',
+    'view.pole': 'South Pole', 'view.near': 'Near Side', 'view.far': 'Far Side', zoomIn: 'Zoom in', zoomOut: 'Zoom out',
+    scene3d: 'Moon · 3D scene in progress', subSolar: 'Sub-solar', subEarth: 'Sub-Earth',
+    footer: 'Data: NASA LRO/LOLA · JPL Horizons · Moon Trek · NASA Space Apps Challenge 2026 · Astana · Team MainTech',
+    'kids.priorities': 'Move the sliders to tell the computer what matters most for your mission. The ranking updates instantly.',
+    'kids.horizon': 'This is what an astronaut sees turning all the way around. Near the south pole the Sun never climbs above ~1.5° — it slides along the horizon. If a mountain is in the way, the solar panels get no power. Earth barely moves in the sky, so mountains can block our radio link for days.',
+    'kids.card': 'The countdown tells mission control how long until the Sun or Earth disappears behind the terrain — that is when power or communication stops.',
+    'kids.windows': 'Each row is one landing site. Yellow — the Sun is up, blue — we can talk to Earth. Green — both at once: the best time to land!',
+    boot: ['MAINTECH MISSION CONTROL', 'Initializing navigator…', 'Loading LRO / LOLA terrain…', 'Computing Sun & Earth ephemerides…', 'Horizon profiles: ready', 'ALL SYSTEMS NOMINAL ▸ GO'],
+    skip: 'click to skip', d: 'd', h: 'h',
+  },
+}
+
+export function useT() {
+  const lang = useStore((s) => s.lang)
+  return (k, vars) => {
+    let s = D[lang]?.[k] ?? D.en[k] ?? k
+    if (vars && typeof s === 'string') for (const [a, b] of Object.entries(vars)) s = s.replace(`{${a}}`, b)
+    return s
+  }
+}
+
+export function useFmt() {
+  const lang = useStore((s) => s.lang)
+  const L = D[lang]
+  return {
+    lang,
+    h(hours) {
+      if (hours == null) return '—'
+      if (hours < 48) return `${Math.round(hours)}${L.h}`
+      const d = Math.floor(hours / 24), r = Math.round(hours % 24)
+      return `${d}${L.d} ${String(r).padStart(2, '0')}${L.h}`
+    },
+    day: (t) => new Date(t).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }),
+    dt: (t) => new Date(t).toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
+  }
+}
