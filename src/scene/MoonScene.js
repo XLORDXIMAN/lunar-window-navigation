@@ -961,6 +961,8 @@ export class MoonScene {
     for (let i = 0; i < steps && s.phase !== 'LANDED'; i++) s = L.sim.step((dtReal * scale) / steps, L.groundZ);
     if (s.phase === 'LANDED' && L.landedAt == null) L.landedAt = now;
 
+    // telemetry for the host app's landing HUD (added in integration)
+    this._emit('landingtelemetry', { phase: s.phase, alt: s.alt, vs: s.vs, hs: s.hs, throttle: s.throttle, scale, t: L.sim.t })
     const names = { APPROACH: 'Approach · braking (P64)', VERTICAL: 'Vertical descent (P66)', CONTACT: 'CONTACT LIGHT · engine stop', LANDED: 'Touchdown' };
     const f1 = (x) => (Math.abs(x) < 10 ? x.toFixed(1) : Math.round(x));
     this.hud.setCaption(
@@ -1023,6 +1025,11 @@ export class MoonScene {
     L.camTarget = L.camTarget ? L.camTarget.lerp(look, 1 - Math.exp(-dtReal * 6)) : look;
     pv.camera.up.copy(L.upL);
     pv.camera.lookAt(L.camTarget);
+    // cinematic: engine rumble shakes the chase camera near the ground (added in integration)
+    if ((s.phase === 'APPROACH' || s.phase === 'VERTICAL') && s.alt < 120) {
+      const amp = km(0.25) * s.throttle * (1 - s.alt / 120)
+      pv.camera.position.addScaledVector(L.sideL, (Math.random() - 0.5) * amp).addScaledVector(L.upL, (Math.random() - 0.5) * amp)
+    }
     if (L.landedAt != null && now - L.landedAt > 2200) L.resolve();
   }
 
@@ -1037,6 +1044,11 @@ export class MoonScene {
       side: THREE.DoubleSide,
     });
     const plume = new THREE.Mesh(geo, mat);
+    // white-hot inner core (added in integration); follows the outer plume's opacity/scale
+    const core = new THREE.Mesh(new THREE.ConeGeometry(0.45, 4.2, 18, 1, true).translate(0, -2.1, 0),
+      new THREE.MeshBasicMaterial({ color: 0xfff4dd, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    plume.add(core);
+    plume.onBeforeRender = () => { core.material.opacity = Math.min(1, mat.opacity * 1.5) };
     const nozzle = lander.getObjectByName('Nozzle_Main') ?? lander.getObjectByName('Engine') ?? lander;
     plume.position.set(0, nozzle === lander ? 0.6 : 0, 0);
     nozzle.add(plume);

@@ -8,22 +8,6 @@ import { stateAt, timeToChange, windowMetrics, verdict, bestWindow, score, earth
 import { useT, useFmt } from '../lib/i18n.js'
 import { AnimNum, useSiteName, Reveal } from '../lib/ui.jsx'
 import HorizonPlot from './HorizonPlot.jsx'
-import { lazy, Suspense, useEffect as useEff, useRef as useR } from 'react'
-import DotMoon from './DotMoon.jsx'
-const Moon3D = lazy(() => import('./Moon3D.jsx'))
-
-// mount the heavy three.js scene only when it approaches the viewport
-function MoonStage() {
-  const ref = useR(null)
-  const [on, setOn] = useState(false)
-  useEff(() => {
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect() } }, { rootMargin: '600px 0px' })
-    io.observe(ref.current)
-    const idle = setTimeout(() => setOn(true), 2500) // safety: preload anyway shortly after the page settles
-    return () => { io.disconnect(); clearTimeout(idle) }
-  }, [])
-  return <div ref={ref}>{on ? <Suspense fallback={<DotMoon />}><Moon3D /></Suspense> : <DotMoon />}</div>
-}
 import SkyDial from './SkyDial.jsx'
 
 const VCOL = { green: 'text-go border-go/60', yellow: 'text-warn border-warn/60', red: 'text-nogo border-nogo/60' }
@@ -337,7 +321,6 @@ export default function Navigator() {
           } />
         </Reveal>
 
-        <div className="mb-6"><MoonStage /></div>
         <div className="grid xl:grid-cols-[minmax(300px,4fr)_8fr] gap-x-6 gap-y-6">
           <Reveal className="glass p-6 self-start"><SiteList /></Reveal>
           <div className="flex flex-col gap-8 min-w-0">

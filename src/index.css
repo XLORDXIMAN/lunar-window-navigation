@@ -400,3 +400,12 @@ a.lux-glass:hover, button.lux-glass:hover { background: rgba(186,207,247,.04); b
 .glass:hover::before, .lux-glass:hover::before { opacity: 1; }
 .lux-glass { background: linear-gradient(180deg, rgba(150,175,235,.12), rgba(150,175,235,.035)); border: 1px solid rgba(190,210,250,.16);
   box-shadow: rgba(216,236,248,.28) 0 1px 1px 0 inset, rgba(168,216,245,.08) 0 24px 48px 0 inset, 0 40px 80px -40px rgba(0,0,0,.95); }
+
+/* ================= full-screen Moon: fit member 01's HUD around our glass UI ================= */
+#moon .moon-hud .hud-badge { top: auto; bottom: 104px; right: 24px; opacity: .75; }
+#moon .moon-hud .hud-readout { top: 104px; }
+#moon .moon-hud .hud-legend { bottom: 150px; right: 24px; }
+#moon .moon-hud .hud-hint { bottom: 104px; }
+#moon .moon-hud .hud-caption { bottom: 120px; }
+#moon.is-landing .moon-hud .hud-caption, #moon.is-landing .moon-hud .hud-hint { display: none; }
+#moon:fullscreen { height: 100vh; }
