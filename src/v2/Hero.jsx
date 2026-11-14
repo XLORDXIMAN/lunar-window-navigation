@@ -1,12 +1,11 @@
 // First screen — pixel-arcade space: a big question, a live answer typed from real data,
 // pixel stat cards and the south-pole dot terrain with a low Sun.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store.js'
 import { useT, useFmt } from '../lib/i18n.js'
 import { bestWindow, windowMetrics, verdict, DAY } from '../lib/ephem.js'
 import { siteName } from '../lib/ui.jsx'
 import ParticleTerrain from './ParticleTerrain.jsx'
-import PixelIcon from './PixelIcon.jsx'
 
 export const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
@@ -20,26 +19,26 @@ export function FlagMark({ className = 'w-7 h-5' }) {
   )
 }
 
-export function Nav({ active = 'top' }) {
+export function Nav() {
   const t = useT()
   const { lang, setLang } = useStore()
   const items = [['navigator', 'nav.nav'], ['windows', 'nav.data'], ['scenario', 'nav.team'], ['how', 'nav.how']]
   return (
-    <nav className="wrap flex items-center gap-8 h-[76px]">
-      <button onClick={() => go('top')} className="flex items-center gap-3 shrink-0">
-        <FlagMark />
-        <span className="font-display text-[20px] font-semibold tracking-[.02em]">Lunar<span className="accent">Window</span></span>
-      </button>
-      <ul className="hidden lg:flex items-center gap-8 ml-6">
-        {items.map(([id, k]) => <li key={id}><button className={`navlink ${active === id ? 'on' : ''}`} onClick={() => go(id)}>{t(k)}</button></li>)}
-      </ul>
-      <div className="ml-auto flex items-center gap-5">
-        <div className="chip !py-1 !px-1 gap-0">
-          {['ru', 'en'].map((l) => <button key={l} onClick={() => setLang(l)} className={`px-2.5 py-1 rounded-full transition-colors ${lang === l ? 'bg-ice text-void' : 'text-fog hover:text-ice'}`}>{l}</button>)}
+    <div className="wrap pt-4">
+      <nav className="glass !rounded-full flex items-center gap-6 h-[60px] pl-5 pr-2">
+        <button onClick={() => go('top')} className="flex items-center gap-2.5 shrink-0">
+          <FlagMark className="w-6 h-[18px]" />
+          <span className="font-display text-[17px] font-semibold">LunarWindow</span>
+        </button>
+        <ul className="hidden lg:flex items-center gap-7 mx-auto">
+          {items.map(([id, k]) => <li key={id}><button className="text-[14px] text-ice/70 hover:text-ice transition-colors" onClick={() => go(id)}>{t(k)}</button></li>)}
+        </ul>
+        <div className="ml-auto lg:ml-0 flex items-center gap-2">
+          <div className="seg">{['ru', 'en'].map((l) => <button key={l} onClick={() => setLang(l)} className={lang === l ? 'on' : ''}>{l.toUpperCase()}</button>)}</div>
+          <button className="cta hidden sm:inline-flex !py-2.5 !px-5 !text-[14px]" onClick={() => go('navigator')}>{t('hero.cta')}</button>
         </div>
-        <button className="cta hidden sm:inline-flex !py-2.5" onClick={() => go('navigator')}>{t('hero.cta')} <span aria-hidden>↗</span></button>
-      </div>
-    </nav>
+      </nav>
+    </div>
   )
 }
 
@@ -68,70 +67,41 @@ function Answer() {
   if (!cur) return null
   const col = { green: 'text-go border-go/50', yellow: 'text-warn border-warn/50', red: 'text-nogo border-nogo/50' }[cur.level]
   return (
-    <div className="card p-5 max-w-[620px]" style={{ '--glow': 'rgb(124 255 107 / .18)' }}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="mono-sm text-fog">{t('hero3.answer')}</span>
-        <span className="flex gap-1.5"><i className="w-2 h-2 rounded-full bg-nogo/80" /><i className="w-2 h-2 rounded-full bg-warn/80" /><i className="w-2 h-2 rounded-full bg-go/80" /></span>
+    <div className="glass px-6 py-5 w-full max-w-[640px] text-left">
+      <div className="text-[13px] text-fog mb-2">{t('hero3.answer')}</div>
+      <div className="flex items-center gap-4">
+        <div className="flex-1 font-mono text-[15px] sm:text-[16px] text-ice min-h-[1.6em]">{text.slice(0, k)}<span className="caret text-ice/70" /></div>
+        <span className={`text-[13px] font-medium whitespace-nowrap transition-opacity ${col.split(' ')[0]} ${k >= text.length ? 'opacity-100' : 'opacity-0'}`}>● {t(`v.${cur.level}`).split(' — ')[0]}</span>
       </div>
-      <div className="font-mono text-[15px] sm:text-[17px] text-ice min-h-[2.6em]">
-        <span className="text-go">&gt; </span>{text.slice(0, k)}<span className="caret text-go" />
-      </div>
-      <div className={`chip mt-3 ${col} ${k >= text.length ? 'opacity-100' : 'opacity-0'} transition-opacity`}>● {t(`v.${cur.level}`)}</div>
     </div>
   )
 }
 
 export default function Hero() {
   const t = useT()
-  const el = useRef(null), az = useRef(null)
-  const onSun = (s) => {
-    if (el.current) el.current.textContent = `${s.el >= 0 ? '+' : ''}${s.el.toFixed(2)}°`
-    if (az.current) az.current.textContent = `${s.az.toFixed(1)}°`
-  }
-  const stats = [['sun', '1.5°', 'hero3.s1', 'grad-sun'], ['earth', '0%', 'hero3.s2', 'grad-earth'], ['time', '12', 'hero3.s3', 'text-ice']]
-
   return (
     <section id="top" className="relative min-h-[100svh] flex flex-col overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-[58%] opacity-90 [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"><ParticleTerrain onSun={onSun} /></div>
+      <div className="absolute inset-x-0 bottom-0 h-[55%] opacity-80 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_70%,transparent)]"><ParticleTerrain /></div>
       <div className="relative z-10"><Nav /></div>
 
-      <div className="relative z-10 wrap flex-1 grid lg:grid-cols-[1.25fr_1fr] gap-10 items-start pt-[clamp(24px,5vh,72px)]">
-        <div className="flex flex-col gap-8">
-          <span className="chip self-start rise"><PixelIcon name="moon" size={16} /> {t('hero.kicker')}</span>
-          <h1 className="h-display">
-            {t('hero3.title').split('|').map((line, i) => (
-              <span key={i} className="block word" style={{ animationDelay: `${0.1 + i * 0.12}s` }}>
-                {line.split('*').map((part, j) => j % 2 ? <span key={j} className="grad-sun glow-sun">{part}</span> : part)}
+      <div className="relative z-10 wrap flex-1 flex flex-col items-center text-center pt-[clamp(48px,12vh,140px)] gap-7">
+        <span className="text-[14px] text-fog rise">{t('hero3.kicker')}</span>
+        <h1 className="h-display">
+          {t('hero3.title').split('|').map((line, i) => (
+            <span key={i} className="block">
+              <span className="word" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
+                {line.split('*').map((part, j) => j % 2 ? <span key={j} className="grad-sun">{part}</span> : part)}
               </span>
-            ))}
-          </h1>
-          <p className="text-[18px] leading-[1.55] text-ice/75 max-w-[540px] rise" style={{ animationDelay: '.45s' }}>{t('hero3.sub')}</p>
-          <div className="rise" style={{ animationDelay: '.6s' }}><Answer /></div>
-        </div>
-
-        <div className="hidden lg:flex flex-col gap-4 pt-6">
-          {stats.map(([icon, val, k, cls], i) => (
-            <div key={icon} className="card p-5 flex items-center gap-5 rise" style={{ animationDelay: `${0.5 + i * 0.12}s`, '--glow': icon === 'sun' ? 'rgb(255 122 26 / .3)' : icon === 'earth' ? 'rgb(71 200 255 / .3)' : 'rgb(139 92 255 / .3)' }}>
-              <PixelIcon name={icon} size={64} />
-              <div>
-                <div className={`font-display text-[44px] leading-none font-semibold ${cls}`}>{val}{icon === 'time' && <span className="text-[20px] text-fog ml-1">{t('hero3.days')}</span>}</div>
-                <div className="text-[14px] text-ice/70 mt-1.5 max-w-[300px]">{t(k)}</div>
-              </div>
-            </div>
+            </span>
           ))}
-          <div className="card p-5 rise" style={{ animationDelay: '.9s', '--glow': 'rgb(255 210 63 / .25)' }}>
-            <div className="mono-sm text-fog mb-2">{t('hero.readout')}</div>
-            <div className="flex gap-8 num">
-              <div><div className="mono-sm text-fog">EL</div><div ref={el} className="font-display text-[28px] grad-sun">+0.00°</div></div>
-              <div><div className="mono-sm text-fog">AZ</div><div ref={az} className="font-display text-[28px] text-ice">0.0°</div></div>
-            </div>
-          </div>
+        </h1>
+        <p className="text-[19px] leading-[1.5] text-ice/70 max-w-[620px] rise" style={{ animationDelay: '.35s' }}>{t('hero3.sub')}</p>
+        <div className="flex flex-wrap justify-center gap-3 rise" style={{ animationDelay: '.45s' }}>
+          <button className="cta" onClick={() => go('navigator')}>{t('hero.cta')}</button>
+          <button className="btn-ghost" onClick={() => go('how')}>{t('nav.how')}</button>
         </div>
+        <div className="w-full flex justify-center mt-6 rise" style={{ animationDelay: '.6s' }}><Answer /></div>
       </div>
-
-      <button onClick={() => go('columns')} aria-label="scroll" className="relative z-10 mx-auto mb-8 mt-6 chip hover:border-ice/40">
-        <span style={{ animation: 'bob 1.6s ease-in-out infinite' }}>↓</span> {t('hero3.scroll')}
-      </button>
     </section>
   )
 }

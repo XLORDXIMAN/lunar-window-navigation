@@ -32,11 +32,11 @@ export function Windows() {
         <Reveal><SectionHead n="03" kicker={t('windows', { n: DAYS })} title={t('win2.title')} right={
           <div className="flex flex-wrap gap-2">
             {[['both', t('lBoth')], ['sun', t('lSun')], ['link', t('lLink')], ['none', t('win3.none')]].map(([k, l]) => (
-              <span key={k} className="chip"><i className="w-3 h-3 rounded-[3px]" style={{ background: CELL[k], boxShadow: k !== 'none' ? `0 0 10px ${CELL[k]}` : 'none' }} />{l}</span>
+              <span key={k} className="flex items-center gap-2 text-[13px] text-ice/70 mr-4"><i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: CELL[k] }} />{l}</span>
             ))}
           </div>} /></Reveal>
 
-        <Reveal className="card p-6 md:p-8" style={{ '--glow': 'rgb(124 255 107 / .16)' }} onMouseMove={follow}>
+        <Reveal className="glass p-6 md:p-9">
           <div className="hidden md:grid grid-cols-[230px_1fr_90px] gap-x-5 mb-3">
             <span />
             <div className="relative h-4">
@@ -104,10 +104,10 @@ export function Scenario() {
   const days = Math.round((b.time - time) / DAY)
 
   const side = (e, label, editable) => (
-    <div className="card p-7 h-full" style={{ '--glow': VGLOW[e.v.level] }} onMouseMove={follow}>
+    <div className="p-7 md:p-9 h-full">
       <div className="flex items-center justify-between mb-5 gap-3">
-        <span className="chip">{label}</span>
-        <span className={`font-display font-extrabold italic text-[28px] ${VCOL[e.v.level]}`} style={{ textShadow: `0 0 18px ${VGLOW[e.v.level]}` }}>{t(`v.${e.v.level}`).split(' — ')[0]}</span>
+        <span className="text-[13px] text-fog">{label}</span>
+        <span className={`font-display font-bold text-[22px] ${VCOL[e.v.level]}`}>● {t(`v.${e.v.level}`).split(' — ')[0]}</span>
       </div>
       {editable ? (
         <select className="w-full bg-transparent border-b border-ice/25 py-1 font-display text-[24px] font-bold outline-none mb-2" value={siteB.id} onChange={(ev) => setScenarioB({ siteId: ev.target.value, time: b.time })}>
@@ -131,15 +131,15 @@ export function Scenario() {
         <Reveal><SectionHead n="04" kicker={t('slip')} title={t('scen2.title', { d: days })} right={
           <button className="chip hover:border-ice/40" onClick={() => setScenarioB({ siteId: siteA.id, time: time + 12 * DAY })}>↺ {t('reset')}</button>} /></Reveal>
 
-        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+        <Reveal className="glass overflow-hidden">
+        <div className="grid md:grid-cols-[1fr_auto_1fr] items-stretch border-b border-white/10">
           {side(A, t('scenA'), false)}
-          <div className="grid place-items-center">
-            <span className="font-display font-extrabold italic text-[30px] w-16 h-16 grid place-items-center rounded-full" style={{ border: '1px solid rgb(255 122 26 / .45)', boxShadow: '0 0 30px rgb(255 122 26 / .25)' }}><span className="grad-sun">VS</span></span>
+          <div className="hidden md:grid place-items-center px-2">
+            <span className="text-[13px] text-fog w-11 h-11 grid place-items-center rounded-full border border-white/15 bg-white/5">vs</span>
           </div>
           {side(B, t('scenB'), true)}
         </div>
-
-        <Reveal className="card p-6 md:p-8 mt-4" style={{ '--glow': 'rgb(61 123 255 / .18)' }} onMouseMove={follow}>
+        <div className="p-6 md:p-9">
           <div className="grid lg:grid-cols-2 gap-x-14">
             {ROWS.map(([k, g, fmt, dir]) => {
               const va = g(A), vb = g(B), d = vb - va, good = d * dir > 1e-6, bad = d * dir < -1e-6
@@ -167,6 +167,7 @@ export function Scenario() {
           <p className={`font-display font-bold text-[clamp(20px,2.2vw,28px)] leading-[1.3] mt-8 ${worse.length ? 'text-ice' : 'text-go'}`}>
             {worse.length ? <>⚠ {t('scen2.worse', { v: worse.join(', ') })}</> : <>✓ {t('allBetter').replace(/^\S+\s/, '')}</>}
           </p>
+        </div>
         </Reveal>
       </div>
     </section>
@@ -177,26 +178,25 @@ export function Scenario() {
 export function Info() {
   const t = useT()
   const icons = ['moon', 'time', 'sun', 'earth']
-  const glows = ['rgb(139 92 255 / .3)', 'rgb(255 210 63 / .28)', 'rgb(255 122 26 / .3)', 'rgb(71 200 255 / .3)']
   return (
     <>
       <section id="how" className="py-[var(--section-gap)]">
         <div className="wrap">
           <Reveal><SectionHead n="05" kicker={t('nav.how')} title={t('how2.title')} /></Reveal>
-          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Reveal className="glass grid sm:grid-cols-2 xl:grid-cols-4">
             {t('how.steps').map(([h, p], i) => (
-              <Reveal key={i} delay={i * 0.08} className="card p-7 flex flex-col gap-5" style={{ '--glow': glows[i] }} onMouseMove={follow}>
+              <div key={i} className={`p-8 flex flex-col gap-4 border-white/10 ${i > 0 ? 'xl:border-l' : ''} ${i % 2 ? 'sm:border-l' : ''} ${i > 1 ? 'sm:border-t xl:border-t-0' : ''} ${i > 0 ? 'border-t sm:border-t-0' : ''}`}>
                 <div className="flex items-center justify-between">
-                  <span className="font-display font-extrabold italic text-[56px] leading-none text-ice/15">0{i + 1}</span>
-                  <PixelIcon name={icons[i]} size={56} />
+                  <span className="font-display font-bold text-[15px] text-fog">0{i + 1}</span>
+                  <PixelIcon name={icons[i]} size={36} />
                 </div>
-                <h3 className="font-display font-bold text-[24px] uppercase">{h}</h3>
+                <h3 className="font-display font-semibold text-[22px]">{h}</h3>
                 <p className="text-[15px] leading-[1.6] text-ice/65">{p}</p>
-              </Reveal>
+              </div>
             ))}
-          </div>
+          </Reveal>
           <div className="flex justify-center mt-14">
-            <button className="cta !text-[13px] !px-8 !py-4" onClick={() => document.getElementById('navigator')?.scrollIntoView({ behavior: 'smooth' })}>{t('hero.cta')} ↗</button>
+            <button className="cta" onClick={() => document.getElementById('navigator')?.scrollIntoView({ behavior: 'smooth' })}>{t('hero.cta')} ↗</button>
           </div>
         </div>
       </section>

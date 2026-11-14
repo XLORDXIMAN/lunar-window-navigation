@@ -281,12 +281,26 @@ function Steps() {
   )
 }
 
+function SkyTabs() {
+  const t = useT()
+  const [tab, setTab] = useState('horizon')
+  return (
+    <div>
+      <div className="seg mb-3">
+        <button className={tab === 'horizon' ? 'on' : ''} onClick={() => setTab('horizon')}>{t('tabs.horizon')}</button>
+        <button className={tab === 'sky' ? 'on' : ''} onClick={() => setTab('sky')}>{t('tabs.sky')}</button>
+      </div>
+      {tab === 'horizon' ? <HorizonPlot /> : <div className="max-w-[560px]"><SkyDial /></div>}
+    </div>
+  )
+}
+
 function ReadoutCard() {
   const site = useSite(); const time = useStore((s) => s.time)
   if (!site) return null
   const v = verdict(windowMetrics(site, Math.floor(time / HOUR) * HOUR, 14, 1), site)
   const glow = { green: 'rgb(124 255 107 / .22)', yellow: 'rgb(255 216 77 / .22)', red: 'rgb(255 77 109 / .25)' }[v.level]
-  return <div className="card p-7" style={{ '--glow': glow }}><Readout /></div>
+  return <div className="glass p-7"><Readout /></div>
 }
 
 export default function Navigator() {
@@ -309,15 +323,11 @@ export default function Navigator() {
           } />
         </Reveal>
 
-        <Steps />
-        <div className="grid xl:grid-cols-[minmax(300px,4fr)_8fr] gap-x-8 gap-y-8 mt-8">
-          <Reveal className="card p-6 self-start" style={{ '--glow': 'rgb(139 92 255 / .25)' }}><SiteList /></Reveal>
+        <div className="grid xl:grid-cols-[minmax(300px,4fr)_8fr] gap-x-6 gap-y-6">
+          <Reveal className="glass p-6 self-start"><SiteList /></Reveal>
           <div className="flex flex-col gap-8 min-w-0">
             <ReadoutCard />
-            <div className="grid 2xl:grid-cols-[1.6fr_1fr] gap-6 items-start">
-              <HorizonPlot />
-              <SkyDial />
-            </div>
+            <SkyTabs />
             {kids && <p className="kids -mt-6">{t('kids.horizon')}</p>}
           </div>
         </div>
