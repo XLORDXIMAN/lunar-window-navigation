@@ -118,7 +118,7 @@ function Lander() {
   )
 }
 
-export default function Intro({ onDone }) {
+export function SvgIntro({ onDone }) {
   const t_ = useT()
   const [t, setT] = useState(0)
   const [leaving, setLeaving] = useState(false)
