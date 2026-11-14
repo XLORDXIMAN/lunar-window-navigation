@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useStore, loadSites } from './store.js'
 import { useT } from './lib/i18n.js'
 import Starfield from './components/Starfield.jsx'
-import BootScreen from './components/BootScreen.jsx'
+import Intro from './components/Intro.jsx'
 import TopBar from './components/TopBar.jsx'
 import SiteCatalog from './components/SiteCatalog.jsx'
 import MoonScene from './components/MoonScene.jsx'
@@ -46,7 +46,7 @@ export default function App() {
   return (
     <>
       <Starfield />
-      {boot && <BootScreen onDone={done} />}
+      {boot && <Intro onDone={done} />}
       {!ready ? <div className="min-h-screen grid place-items-center label">{t('loading')}</div> : !boot && (
         <>
           <Hero />

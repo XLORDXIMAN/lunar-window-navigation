@@ -52,6 +52,7 @@ const D = {
     'team.title': 'Команда MainTech',
     'team.roles': [['Участник 01', '3D-Луна и рельеф LOLA'], ['Участник 02', 'Данные, эфемериды JPL Horizons, наука'], ['Участник 03', 'Интерфейс, интеграция, питч']],
     'team.place': 'Астана · Miras International School · 14–15 ноября 2026',
+    'intro.tag': 'LUNARWINDOW · НАВИГАТОР ПОСАДКИ НА ЛУНУ · NASA SPACE APPS 2026',
     skip: 'нажмите, чтобы пропустить', d: 'д', h: 'ч',
   },
   en: {
@@ -105,6 +106,7 @@ const D = {
     'team.title': 'Team MainTech',
     'team.roles': [['Member 01', '3D Moon and LOLA terrain'], ['Member 02', 'Data, JPL Horizons ephemerides, science'], ['Member 03', 'Interface, integration, pitch']],
     'team.place': 'Astana · Miras International School · 14–15 November 2026',
+    'intro.tag': 'LUNARWINDOW · LUNAR LANDING SITE NAVIGATOR · NASA SPACE APPS 2026',
     skip: 'click to skip', d: 'd', h: 'h',
   },
 }
