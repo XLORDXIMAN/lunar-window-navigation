@@ -179,7 +179,7 @@ export default function MoonSection() {
       </div>
 
       {/* readout card */}
-      {site && st && (
+      {site && st && !result && (
         <div className={`absolute z-30 right-4 md:right-8 top-[120px] w-[280px] hidden md:block transition-opacity duration-500 ${cine ? 'opacity-0 pointer-events-none' : ''}`}><div className="glass p-5">
           <div className="text-[15px] text-[var(--lux-hi)] truncate">{siteName(site, lang)}</div>
           <div className={`text-[13px] mt-1 ${VTXT[v.level]}`}>● {t(`v.${v.level}`).split(' — ')[0]}</div>

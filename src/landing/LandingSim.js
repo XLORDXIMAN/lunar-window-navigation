@@ -169,9 +169,30 @@ export class LandingSim {
           const m = o.material
           if (m) { m.envMapIntensity = 0; m.metalness = 0; if (m.normalMap) m.normalScale.set(0.55, 0.55) }
           if (o.name === 'lunar_terrain') regolith(m, { gain: 1.3 })
-          else if (o.name === 'boulders') { m.flatShading = false; m.normalMap = null; m.map = null; m.color.set(0x8f8b86); m.roughness = 0.95; regolith(m, { bakedLum: false, gain: 1.25 }); m.needsUpdate = true }
+          else if (o.name === 'boulders') { m.flatShading = false; m.normalMap = null; m.map = null; m.color.set(0x6d6964); m.roughness = 0.95; regolith(m, { bakedLum: false, gain: 1.25 }); m.needsUpdate = true }
         }
       })
+      // blend the outer 120 m of the Blender tile down to its pad height so there is no slab edge
+      this.terrain.traverse((o) => {
+        if (!o.isMesh || (o.name !== 'lunar_terrain' && o.name !== 'boulders')) return
+        if (o.name === 'boulders') { o.userData.flatten = true; return }
+        const p = o.geometry.attributes.position
+        let y0 = 0, best = 1e9
+        for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i), p.getZ(i)); if (r < best) { best = r; y0 = p.getY(i) } }
+        for (let i = 0; i < p.count; i++) {
+          const r = Math.hypot(p.getX(i), p.getZ(i)), k = THREE.MathUtils.smoothstep(r, 360, 492)
+          if (k > 0) p.setY(i, p.getY(i) * (1 - k) + y0 * k)
+        }
+        p.needsUpdate = true; o.geometry.computeVertexNormals()
+        this._rimY0 = y0
+      })
+      // rocks near the flattened rim: hide those beyond 380 m (they would float)
+      const rk = this.terrain.getObjectByName('boulders')
+      if (rk?.geometry) {
+        const p = rk.geometry.attributes.position
+        for (let i = 0; i < p.count; i++) if (Math.hypot(p.getX(i), p.getZ(i)) > 380) p.setY(i, (this._rimY0 ?? 0) - 50)
+        p.needsUpdate = true
+      }
       this.scene.add(this.terrain)
       this.groundMesh = this.terrain.getObjectByName('lunar_terrain')
       this.heroBoulder = this.terrain.getObjectByName('hero_boulder')?.getWorldPosition(new THREE.Vector3()) ?? new THREE.Vector3(11, 1.5, 9)
@@ -489,7 +510,7 @@ export class LandingSim {
       const alt = y - gnd.y
       const firing = S.phase === 'BRAKING' || S.phase === 'TERMINAL'
       this.skirt.position.set(x, gnd.y + 0.5, z)
-      this.skirt.userData.drive(firing && alt < 30 ? Math.max(0.2, S.thr) * Math.pow(1 - alt / 30, 1.5) * 1.3 : 0, now)
+      this.skirt.userData.drive(firing && alt < 30 ? Math.min(1, (0.25 + S.thr) * Math.pow(1 - alt / 30, 1.2) * 2.4) : 0, now)
       if (S.thr > 0.05 && alt < 25) this._emitDust(x, z, gnd.y, S.thr * (1 - alt / 25), dt, now)
       this._camera(dt, gnd)
       // telemetry

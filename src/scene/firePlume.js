@@ -113,7 +113,7 @@ export function createFirePlume({ length = 8, radius = 1.1, light = true } = {})
     inner.scale.set(1, (0.75 + 0.5 * thr) * near, 1);
     glow.material.opacity = (0.55 + 0.45 * thr) * flick;
     glow.scale.setScalar(radius * (4 + 2.5 * thr) * flick);
-    if (lamp) lamp.intensity = 0.0035 * thr * flick * THREE.MathUtils.clamp(1.4 - alt / 60, 0, 1.4);
+    if (lamp) lamp.intensity = 0.006 * thr * flick * THREE.MathUtils.clamp(1.4 - alt / 60, 0, 1.4);
   };
   g.userData.dispose = () => g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose?.(); });
   return g;
@@ -147,7 +147,7 @@ void main(){
   float pulse = 0.75 + 0.25 * sin(r * 26.0 - tt * 7.0);
   float sheet = smoothstep(0.3, 0.85, flow) * pulse * (1.0 - smoothstep(0.2, 1.0, r));
   float core = exp(-r * 6.0);
-  float alpha = (core * 0.7 + sheet * 0.55) * uStr;
+  float alpha = (core * 0.8 + sheet * 0.7 + 0.12 * (1.0 - smoothstep(0.0, 0.8, r))) * uStr;
   gl_FragColor = vec4(vec3(0.86, 0.83, 0.77), clamp(alpha, 0.0, 0.9));
 }`;
 

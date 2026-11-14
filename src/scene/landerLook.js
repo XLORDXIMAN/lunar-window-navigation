@@ -70,7 +70,7 @@ export function crispLander(object, renderer) {
       mm.userData.crisp = true;
       mm.flatShading = false;
       if (mm.map) mm.map.anisotropy = 8;
-      if (env) { mm.envMap = env; mm.envMapIntensity = gold ? 0.9 : 0.35; }
+      if (env) { mm.envMap = env; mm.envMapIntensity = gold ? 0.6 : 0.15; }
       if (gold || dark) {
         mm.normalMap = foilNormal(); mm.normalScale = new THREE.Vector2(0.95, 0.95);
         mm.metalness = gold ? 0.85 : 0.35; mm.roughness = gold ? 0.32 : 0.45;

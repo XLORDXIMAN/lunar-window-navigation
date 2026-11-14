@@ -310,7 +310,7 @@ float regH(vec2 p){ float h = 0., w;
   float pk = patchK(p);
   w = aa(1.2); if (w > 0.) h += craters(p, 1.2) * .1 * w;
   w = aa(3.);  if (w > 0.) h += craters(p, 3.) * .14 * w;   // shallow, degraded: per-pixel bowls must not read as black decals
-  w = aa(9.);  if (w > 0.) h += craters(p, 9.) * .3 * w;
+  w = aa(9.);  if (w > 0.) h += craters(p, 9.) * .2 * w;
   w = aa(25.); if (w > 0.) h += craters(p * 1.07 + 31., 25.) * 1.1 * w;
   w = (1. - pk) * aa(70.); if (w > 0.) h += craters(p, 70.) * 1.6 * w;
   w = aa(1.6); if (w > 0.) h += fbm(p * .6) * .07 * w;
@@ -332,8 +332,8 @@ if (pr > .955) diffuseColor.rgb *= mix(1., pr > .99 ? 1.45 : .55, smoothstep(.0,
 float pk = patchK(vLocalM.xz);
 // mid-scale albedo so the ground stays crisp from 100–1000 m up (fresh rims bright, bowls darker, patchy maturity)
 { float w25 = aa(25.), w9 = aa(9.);
-  if (w25 > 0.) diffuseColor.rgb *= 1. + craters(vLocalM.xz * 1.07 + 31., 25.) * .35 * w25;
-  if (w9 > 0.) diffuseColor.rgb *= 1. + craters(vLocalM.xz, 9.) * .15 * w9;
+  if (w25 > 0.) diffuseColor.rgb *= 1. + max(craters(vLocalM.xz * 1.07 + 31., 25.), 0.) * .25 * w25; // bright fresh rims only
+  // (no per-pixel crater albedo at 9 m: it read as dark stickers; relief alone shades them)
   diffuseColor.rgb *= mix(.9, 1.1, fbm(vLocalM.xz * .021)) * mix(.92, 1.06, fbm(vLocalM.xz * .0065 + 7.)); }
 diffuseColor.rgb *= 1. + craters(vLocalM.xz, 70.) * .08 * (1. - smoothstep(400., 4000., camD)) * (1. - pk);
 diffuseColor.rgb *= 1. + craters(vLocalM.xz, 320.) * .05 * (1. - pk) + (fbm(vLocalM.xz * .003) - .5) * .2; // ejecta brightening / mare tone

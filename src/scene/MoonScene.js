@@ -1149,7 +1149,7 @@ export class MoonScene {
     {
       const gy = L.groundZ(s.pos[0], s.pos[1]) / 1000;
       L.skirt.position.set(pos.x, gy + 0.0006, pos.z); // above the micro-relief: log-depth ignores polygonOffset
-      L.skirt.userData.drive(firing && s.alt < 30 ? s.throttle * Math.pow(1 - s.alt / 30, 1.5) * 1.3 : 0, now / 1000);
+      L.skirt.userData.drive(firing && s.alt < 30 ? Math.min(1, (0.25 + s.throttle) * Math.pow(1 - s.alt / 30, 1.2) * 2.4) : 0, now / 1000);
     }
     if (firing && s.alt < 25) v.dust.emit(L.groundZ(s.pos[0], s.pos[1]) / 1000, s.throttle * (1 - s.alt / 25), dt * scale);
     v.dust.update(dt * scale);

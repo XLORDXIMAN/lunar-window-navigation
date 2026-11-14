@@ -180,7 +180,7 @@ export class Sky {
       dirFromAzEl(frame, az, horizonAt(profile, az), v);
       ring.push(v.x * R, v.y * R, v.z * R);
     }
-    this.dome.add(line(ring, null, 0x67d4ff, 0.9, true));
+    void ring; // integration: no overlay lines in the cinematic 3D sky — the data lives in the HUD and 2D panels
 
     // дуги: ярко — над горизонтом рельефа, тускло — под ним
     const addPath = (pts, color, dimColor) => {
@@ -196,8 +196,8 @@ export class Sky {
       }
       this.dome.add(line(pos, col, 0xffffff, 1, false));
     };
-    addPath(paths.sun, 0xffd23f, 0x5a4a1a);
-    addPath(paths.earth, 0x6fb6ff, 0x1d3550);
+    // integration: the Sun-path guide read as a stray line in cinematic views; data stays in the readout
+    void addPath;
 
     // для сравнения: путь Солнца над Астаной в те же сутки (в тех же азимутах наблюдателя)
     if (paths.earthCity?.length) {
@@ -225,7 +225,7 @@ export class Sky {
     // стороны света на горизонте
     for (const [name, az] of [['N', 0], ['E', 90], ['S', 180], ['W', 270]]) {
       dirFromAzEl(frame, az, horizonAt(profile, az) + 0.4, v).multiplyScalar(R);
-      this.dome.add(label(name, v, 'sky-cardinal'));
+      void name;
     }
     this.dome.visible = true;
   }
