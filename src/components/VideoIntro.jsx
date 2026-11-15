@@ -26,8 +26,16 @@ export default function Intro({ onReveal, onDone }) {
   useEffect(() => {
     if (mode !== 'video') return
     const v = vid.current
-    const startGuard = setTimeout(() => { if (!v || v.currentTime < 0.05) setMode('particles') }, 1800)
-    const hardStop = setTimeout(finish, (END_AT + 2.5) * 1000) // never hang on stage
+    // a slow first visit must not swap in the old particle intro: wait for the clip (faststart MP4 starts
+    // playing after a few hundred KB); fall back only if it truly can't start within 7 s
+    let started = false
+    const onPlaying = () => { started = true }
+    v?.addEventListener('playing', onPlaying)
+    const startGuard = setTimeout(() => { if (!started && (!v || v.currentTime < 0.05)) setMode('particles') }, 7000)
+    let hardStop = null
+    const armStop = () => { clearTimeout(hardStop); hardStop = setTimeout(finish, (END_AT + 2.5) * 1000) } // never hang on stage
+    v?.addEventListener('playing', armStop, { once: true })
+    const lateStop = setTimeout(finish, (7 + END_AT + 2.5) * 1000)
     let endTimer = null
     const sync = () => {
       const tt = v?.currentTime ?? 0
@@ -41,8 +49,9 @@ export default function Intro({ onReveal, onDone }) {
     const iv = setInterval(sync, 40)
     v?.addEventListener('timeupdate', sync)
     v?.addEventListener('ended', onEnded)
-    v?.play?.().catch(() => setMode('particles'))
-    return () => { clearInterval(iv); clearTimeout(startGuard); clearTimeout(hardStop); clearTimeout(endTimer); v?.removeEventListener('timeupdate', sync); v?.removeEventListener('ended', onEnded) }
+    // only a real autoplay refusal falls back; an aborted play() during buffering is retried by autoPlay
+    v?.play?.().catch((e) => { if (e?.name === 'NotAllowedError') setMode('particles') })
+    return () => { clearInterval(iv); clearTimeout(startGuard); clearTimeout(hardStop); clearTimeout(lateStop); v?.removeEventListener('playing', onPlaying); clearTimeout(endTimer); v?.removeEventListener('timeupdate', sync); v?.removeEventListener('ended', onEnded) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
