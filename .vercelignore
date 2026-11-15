@@ -1,0 +1,16 @@
+*.blend1
+.DS_Store
+.claude/
+.vercel
+blender/intro_frames/
+data_raw/
+design/
+dist
+node_modules
+public/models/diorama/_bake/
+scripts/.venv/
+lunarwindow-site.zip
+lunarwindow-site/
+backend/
+lunarwindow-site/
+lunarwindow-site.zip
