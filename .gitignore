@@ -10,3 +10,4 @@ node_modules
 public/models/diorama/_bake/
 scripts/.venv/
 lunarwindow-site.zip
+lunarwindow-site/
