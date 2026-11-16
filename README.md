@@ -1,12 +1,37 @@
-# LunarWindow × MainTech — Lunar Landing Site Navigator
+# 🌙 Lunar Window Navigation
 
-Team **MainTech** · Astana. UI language: Russian by default, RU/EN toggle in the header (submission materials must be in English).
+Built for **NASA Space Apps Challenge 2026** — challenge *Lunar Landing Site Navigator*.
 
-NASA Space Apps Challenge 2026 · Astana · Challenge: **Lunar Landing Site Navigator**
+Interactive 3D Moon tool that helps find the best date, time and location for a lunar landing.
+Pick a landing site and a date — in seconds you see whether the Sun (power) and the Earth
+(direct-to-Earth communication) are above the local horizon, and get a clear **GO / NO-GO** verdict.
 
-Pick a landing site and a date — see in seconds whether the Sun (power) and Earth
-(direct-to-Earth communication) are above the local terrain horizon, how long until
-sunset / Earthset, and how a schedule slip changes mission feasibility.
+🔗 **Live demo:** https://lunarwindow.vercel.app
+
+## Features
+- **Interactive 3D Moon** — real-time lighting by date, LOLA terrain with date-driven shadows at the south pole, "a lunar day in 20 seconds"
+- **Landing window calculation** — Sun and Earth elevation, time to sunset / Earthset, best window in the next 60 days
+- **Landing site selection** — 14 sites (Apollo, Artemis III candidates, CLPS, international missions) + any custom coordinates
+- **Mission metrics** — illumination %, direct-to-Earth comms %, longest darkness, solar-panel energy (kWh/day), battery needed to survive the night
+- **Mission priorities** — sliders for energy / comms / short nights / flat terrain re-rank the top-3 sites instantly
+- **A/B scenarios** — same site on another date, or a neighbouring site on the same date, side by side
+- **Surface view** — stand at the landing site and see where the Sun and Earth are and which ridges block them
+- **Landing simulation** — Apollo-style powered descent (P64 → P66 → contact) in lunar gravity 1.62 m/s², engine plume and dust, touchdown speed
+- **Landing diorama** — cinematic south-pole landing on a Blender-built terrain with the real Sun position
+
+## Tech stack
+- **Frontend:** JavaScript, React 19, Vite, Three.js, Tailwind CSS, Zustand
+- **3D assets:** Blender (procedural terrain, Apollo LM, craters and rocks; Python scripts in `scripts/blender/`)
+- **Backend:** Python, FastAPI — ephemerides, horizon profiles, simulation and scenario comparison
+- **Data:** JPL DE440s ephemerides, NASA LRO LOLA (elevation) and LROC (imagery), IAU / IERS constants
+- **Deploy:** Vercel
+
+## My role
+Frontend & 3D: website design and UI, the interactive 3D Moon chapter, surface view, landing simulation and
+diorama (Blender terrain, lander, engine plume, dust, sky), performance work and the Vercel deployment.
+
+## Team
+Imanali · Nuraly · Almansur
 
 ## Run
 
